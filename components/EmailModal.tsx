@@ -9,18 +9,24 @@ type EmailModalProps = {
   onClose: () => void;
 };
 
-type WaitlistErrorCode =
-  | "ALREADY_JOINED"
+type LeadsErrorCode =
+  | "INVALID_JSON"
   | "INVALID_EMAIL"
   | "INVALID_SOURCE"
+  | "DUPLICATE_LEAD"
+  | "ALREADY_JOINED"
   | "RATE_LIMITED"
+  | "SERVER_CONFIG_ERROR"
   | "CONFIG_ERROR"
-  | "SERVER_ERROR";
+  | "DATABASE_ERROR"
+  | "SERVER_ERROR"
+  | "METHOD_NOT_ALLOWED";
 
-type WaitlistResponse =
+type LeadsResponse =
   | {
       success: true;
       data: {
+        id?: string;
         email: string;
         source: ModalType;
         created_at: string;
@@ -29,7 +35,7 @@ type WaitlistResponse =
   | {
       success: false;
       error: {
-        code: WaitlistErrorCode;
+        code: LeadsErrorCode;
         message: string;
       };
     };
@@ -51,38 +57,61 @@ const modalCopy = {
   }
 } satisfies Record<ModalType, Record<string, string>>;
 
+const successMessage = "Thanks — you're on the list.";
+const duplicateMessage = "You're already on the waitlist.";
 const fallbackErrorMessage = "Something went wrong. Please try again.";
 
-function getErrorMessage(code: WaitlistErrorCode, message?: string) {
-  if (message) return message;
-
+function getErrorMessage(code: LeadsErrorCode, message?: string) {
   switch (code) {
+    case "DUPLICATE_LEAD":
     case "ALREADY_JOINED":
-      return "This email is already on this waitlist.";
+      return duplicateMessage;
     case "INVALID_EMAIL":
       return "Please enter a valid email address.";
+    case "RATE_LIMITED":
+      return "Too many attempts. Please try again later.";
     case "INVALID_SOURCE":
       return "This waitlist source is not supported.";
-    case "RATE_LIMITED":
-      return "Too many attempts. Please wait a moment and try again.";
+    case "INVALID_JSON":
+    case "SERVER_CONFIG_ERROR":
     case "CONFIG_ERROR":
-      return "The waitlist is not configured yet. Please try again later.";
+    case "DATABASE_ERROR":
     case "SERVER_ERROR":
-      return fallbackErrorMessage;
+    case "METHOD_NOT_ALLOWED":
     default:
-      return fallbackErrorMessage;
+      return message || fallbackErrorMessage;
   }
 }
 
+function trackEmailSubmit(source: ModalType) {
+  return fetch("/api/events", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      event: "email_submit",
+      source,
+      page: window.location.pathname,
+      metadata: {
+        form: "email_modal"
+      }
+    })
+  }).catch(() => undefined);
+}
+
 export function EmailModal({ type, onClose }: EmailModalProps) {
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedMessage, setSubmittedMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = modalCopy[type];
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    if (isSubmitting) return;
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const email = String(formData.get("email") ?? "").trim();
 
     if (!email) {
@@ -94,23 +123,30 @@ export function EmailModal({ type, onClose }: EmailModalProps) {
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/waitlist", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ email, source: type })
       });
-      const result = (await response.json()) as WaitlistResponse;
+      const result = (await response.json()) as LeadsResponse;
 
-      if (!response.ok || !result.success) {
-        const error = result.success ? undefined : result.error;
-        setErrorMessage(getErrorMessage(error?.code ?? "SERVER_ERROR", error?.message));
+      if (!result.success) {
+        const message = getErrorMessage(result.error.code, result.error.message);
+        if (result.error.code === "DUPLICATE_LEAD" || result.error.code === "ALREADY_JOINED") {
+          setSubmittedMessage(message);
+          form.reset();
+          void trackEmailSubmit(type);
+          return;
+        }
+        setErrorMessage(message);
         return;
       }
 
-      setSubmitted(true);
-      event.currentTarget.reset();
+      setSubmittedMessage(successMessage);
+      form.reset();
+      void trackEmailSubmit(type);
     } catch {
       setErrorMessage(fallbackErrorMessage);
     } finally {
@@ -136,9 +172,9 @@ export function EmailModal({ type, onClose }: EmailModalProps) {
           <span className="eyebrow">Early access</span>
           <h2 id="email-modal-title">{copy.headline}</h2>
           <p>{copy.sub}</p>
-          {submitted ? (
+          {submittedMessage ? (
             <div className="compliance-note tool-compliance" role="status">
-              Thanks — you&apos;re on the list.
+              {submittedMessage}
             </div>
           ) : (
             <form className="stack" onSubmit={handleSubmit}>
@@ -151,7 +187,7 @@ export function EmailModal({ type, onClose }: EmailModalProps) {
                   {errorMessage}
                 </div>
               ) : null}
-              <button className="btn btn-primary btn-block" type="submit" disabled={isSubmitting}>
+              <button className="btn btn-primary btn-block" type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
                 {isSubmitting ? "Submitting..." : copy.button}
               </button>
             </form>
