@@ -9,6 +9,31 @@ type EmailModalProps = {
   onClose: () => void;
 };
 
+type WaitlistErrorCode =
+  | "ALREADY_JOINED"
+  | "INVALID_EMAIL"
+  | "INVALID_SOURCE"
+  | "RATE_LIMITED"
+  | "CONFIG_ERROR"
+  | "SERVER_ERROR";
+
+type WaitlistResponse =
+  | {
+      success: true;
+      data: {
+        email: string;
+        source: ModalType;
+        created_at: string;
+      };
+    }
+  | {
+      success: false;
+      error: {
+        code: WaitlistErrorCode;
+        message: string;
+      };
+    };
+
 const modalCopy = {
   pro: {
     headline: "Get Notified When Pro Launches",
@@ -24,18 +49,73 @@ const modalCopy = {
     button: "Request Early Access",
     trust: "We'll reach out within 48 hours."
   }
-};
+} satisfies Record<ModalType, Record<string, string>>;
+
+const fallbackErrorMessage = "Something went wrong. Please try again.";
+
+function getErrorMessage(code: WaitlistErrorCode, message?: string) {
+  if (message) return message;
+
+  switch (code) {
+    case "ALREADY_JOINED":
+      return "This email is already on this waitlist.";
+    case "INVALID_EMAIL":
+      return "Please enter a valid email address.";
+    case "INVALID_SOURCE":
+      return "This waitlist source is not supported.";
+    case "RATE_LIMITED":
+      return "Too many attempts. Please wait a moment and try again.";
+    case "CONFIG_ERROR":
+      return "The waitlist is not configured yet. Please try again later.";
+    case "SERVER_ERROR":
+      return fallbackErrorMessage;
+    default:
+      return fallbackErrorMessage;
+  }
+}
 
 export function EmailModal({ type, onClose }: EmailModalProps) {
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = modalCopy[type];
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
-    if (!email) return;
-    setSubmitted(true);
+
+    if (!email) {
+      setErrorMessage("Please enter your email address.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, source: type })
+      });
+      const result = (await response.json()) as WaitlistResponse;
+
+      if (!response.ok || !result.success) {
+        const error = result.success ? undefined : result.error;
+        setErrorMessage(getErrorMessage(error?.code ?? "SERVER_ERROR", error?.message));
+        return;
+      }
+
+      setSubmitted(true);
+      event.currentTarget.reset();
+    } catch {
+      setErrorMessage(fallbackErrorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -64,16 +144,15 @@ export function EmailModal({ type, onClose }: EmailModalProps) {
             <form className="stack" onSubmit={handleSubmit}>
               <label>
                 <span className="eyebrow">Email</span>
-                <input
-                  className="email-input"
-                  type="email"
-                  required
-                  name="email"
-                  placeholder={copy.placeholder}
-                />
+                <input className="email-input" type="email" name="email" required placeholder={copy.placeholder} disabled={isSubmitting} />
               </label>
-              <button className="btn btn-primary btn-block" type="submit">
-                {copy.button}
+              {errorMessage ? (
+                <div className="compliance-note" role="alert">
+                  {errorMessage}
+                </div>
+              ) : null}
+              <button className="btn btn-primary btn-block" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : copy.button}
               </button>
             </form>
           )}
