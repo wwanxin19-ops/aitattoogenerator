@@ -21,5 +21,10 @@ create index if not exists waitlist_signups_ip_created_at_idx
 
 alter table public.waitlist_signups enable row level security;
 
+-- Allow the backend service role to access this table through Supabase REST/PostgREST.
+-- Browsers still cannot write directly because anon/authenticated are not granted table access here.
+grant usage on schema public to service_role;
+grant select, insert on table public.waitlist_signups to service_role;
+
 -- The Next.js API route writes with SUPABASE_SERVICE_ROLE_KEY, which bypasses RLS.
 -- No anon insert/select policy is created so browsers cannot write directly to Supabase.
