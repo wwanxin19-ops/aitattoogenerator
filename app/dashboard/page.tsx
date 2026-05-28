@@ -36,38 +36,42 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Get user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = "/";
-        return;
-      }
-
-      setUser({
-        id: user.id,
-        email: user.email!,
-        name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-        avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-      });
-
-      // Get credits
-      const creditsRes = await fetch("/api/user/credits");
-      if (creditsRes.ok) {
-        const creditsData = await creditsRes.json();
-        if (creditsData.success) {
-          setCredits(creditsData.data);
+      try {
+        // Get user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error("Dashboard auth error:", userError?.message);
+          setLoading(false);
+          return;
         }
-      }
 
-      // Get generation history
-      const historyRes = await fetch("/api/user/history?page=1&limit=10");
-      if (historyRes.ok) {
-        const historyData = await historyRes.json();
-        if (historyData.success) {
-          setGenerations(historyData.data.generations);
+        setUser({
+          id: user.id,
+          email: user.email!,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        });
+
+        // Get credits
+        const creditsRes = await fetch("/api/user/credits");
+        if (creditsRes.ok) {
+          const creditsData = await creditsRes.json();
+          if (creditsData.success) {
+            setCredits(creditsData.data);
+          }
         }
-      }
 
+        // Get generation history
+        const historyRes = await fetch("/api/user/history?page=1&limit=10");
+        if (historyRes.ok) {
+          const historyData = await historyRes.json();
+          if (historyData.success) {
+            setGenerations(historyData.data.generations);
+          }
+        }
+      } catch (err) {
+        console.error("Dashboard load failed:", err);
+      }
       setLoading(false);
     };
 
@@ -89,7 +93,19 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="dashboard">
+        <div className="container">
+          <div className="dashboard-card">
+            <h2>Please Sign In</h2>
+            <p>You need to sign in to view your dashboard.</p>
+            <a href="/" className="btn btn-primary">Go to Home</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">

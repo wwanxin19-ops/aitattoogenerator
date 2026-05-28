@@ -17,14 +17,23 @@ export function AuthButton() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser({
-          id: user.id,
-          email: user.email!,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        });
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error("Auth error:", error.message);
+          setLoading(false);
+          return;
+        }
+        if (user) {
+          setUser({
+            id: user.id,
+            email: user.email!,
+            name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+            avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+          });
+        }
+      } catch (err) {
+        console.error("Get user failed:", err);
       }
       setLoading(false);
     };

@@ -54,7 +54,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // Refresh session if it exists
+  if (session) {
+    await supabase.auth.getUser();
+  }
 
   return response;
 }
