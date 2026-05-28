@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { navItems } from "@/lib/constants";
+import { AuthButton } from "./AuthButton";
 
 export function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -31,6 +32,7 @@ export function NavBar() {
           <Link className="btn btn-primary" href="/ai-tattoo-generator/" onClick={() => setMenuOpen(false)}>
             Start Designing Free
           </Link>
+          <AuthButton />
         </div>
       </nav>
     </header>
