@@ -9,6 +9,13 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", dis
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 const ibmPlexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-ibm-plex-mono", display: "swap" });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#15120e",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
