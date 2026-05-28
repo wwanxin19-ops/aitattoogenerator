@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { trackCTAClick } from "@/lib/analytics";
 import { ComplianceNote } from "@/components/Shared";
 import { ModalButton } from "@/components/ModalButtons";
 
@@ -160,7 +161,7 @@ export function GeneratorForm() {
             {errorMessage}
           </div>
         ) : null}
-        <button className="btn btn-primary btn-block" type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={isSubmitting} aria-busy={isSubmitting} onClick={() => trackCTAClick("generate_submit", "generator_page")}>
           {isSubmitting ? "Creating mock preview..." : "Start Designing Free"}
         </button>
         <ComplianceNote tool />

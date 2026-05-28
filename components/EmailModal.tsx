@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { trackFormSubmit } from "@/lib/analytics";
 
 type ModalType = "pro" | "studio";
 
@@ -138,6 +139,7 @@ export function EmailModal({ type, onClose }: EmailModalProps) {
           setSubmittedMessage(message);
           form.reset();
           void trackEmailSubmit(type);
+      trackFormSubmit(type === "pro" ? "waitlist" : "studio_lead", "success");
           return;
         }
         setErrorMessage(message);

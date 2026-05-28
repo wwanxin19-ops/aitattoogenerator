@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EmailModal } from "./EmailModal";
+import { trackCTAClick } from "@/lib/analytics";
 
 type ModalType = "pro" | "studio";
 
@@ -12,30 +13,12 @@ type ModalButtonProps = {
   section?: string;
 };
 
-function trackCtaClick(type: ModalType, ctaText: string, section: string) {
-  return fetch("/api/events", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      event: "cta_click",
-      source: type,
-      page: window.location.pathname,
-      metadata: {
-        cta_text: ctaText,
-        section
-      }
-    })
-  }).catch(() => undefined);
-}
-
 export function ModalButton({ type, children, block, section = "pricing" }: ModalButtonProps) {
   const [open, setOpen] = useState(false);
 
   function handleClick() {
     setOpen(true);
-    void trackCtaClick(type, children, section);
+    trackCTAClick(type === "pro" ? "waitlist_open" : "studio_open", section);
   }
 
   return (

@@ -9,6 +9,7 @@
     "lint": "eslint app components lib --max-warnings=0"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.6",
     "next": "^15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
