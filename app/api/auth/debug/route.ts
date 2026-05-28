@@ -24,10 +24,10 @@ export async function GET(request: NextRequest) {
       error: error ? error.message : null,
       hasSession: !!data.session,
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     connectionTest = {
       success: false,
-      error: e.message,
+      error: e instanceof Error ? e.message : String(e),
       hasSession: false,
     };
   }
