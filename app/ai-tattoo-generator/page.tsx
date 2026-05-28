@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { ComplianceNote } from "@/components/Shared";
-import { ModalButton } from "@/components/ModalButtons";
+import { GeneratorForm } from "@/components/GeneratorForm";
 
 export const metadata: Metadata = {
   title: "AI Tattoo Generator — See Your Design in 30 Seconds",
@@ -26,45 +25,7 @@ export default function GeneratorPage() {
       </section>
 
       <section className="section section-tight">
-        <div className="container grid-2">
-          <form className="generator-panel stack">
-            <label>
-              Your tattoo idea
-              <textarea placeholder="Example: a realism wolf portrait with pine branches, designed for the upper arm" />
-            </label>
-            <div className="grid-2">
-              <label>
-                Style
-                <select defaultValue="realism">
-                  <option value="realism">Realism</option>
-                  <option value="minimalist">Minimalist</option>
-                  <option value="traditional">Traditional</option>
-                  <option value="fine-line">Fine line</option>
-                </select>
-              </label>
-              <label>
-                Placement
-                <select defaultValue="arm">
-                  <option value="arm">Arm</option>
-                  <option value="forearm">Forearm</option>
-                  <option value="wrist">Wrist</option>
-                  <option value="shoulder">Shoulder</option>
-                </select>
-              </label>
-            </div>
-            <button className="btn btn-primary btn-block" type="button">Start Designing Free</button>
-            <ComplianceNote tool />
-          </form>
-          <aside className="card-dark stack">
-            <span className="eyebrow">Preview area</span>
-            <div className="preview-box"><div className="preview-art" aria-hidden="true" /><p>Your generated reference will appear here.</p></div>
-            <div className="card-paper stack">
-              <h3>Want HD Downloads & More Generations?</h3>
-              <p>Join the Pro waitlist for launch updates. No payment flow is active this week.</p>
-              <ModalButton type="pro" block>Join Pro Waitlist</ModalButton>
-            </div>
-          </aside>
-        </div>
+        <GeneratorForm />
       </section>
     </main>
   );
