@@ -114,9 +114,38 @@ export function FAQAccordion({ items }: { items: Array<[string, string]> }) {
   );
 }
 
-export function ExampleImagePlaceholder() {
-  return <div className="placeholder">[示例图位置 — 小码提供]</div>;
+export function ExampleImagePlaceholder({ src, alt }: { src?: string; alt?: string }) {
+  const defaultImages: Record<string, { src: string; alt: string }> = {
+    "/styles/realism": {
+      src: "/images/tattoos/realism-example.svg",
+      alt: "Realism tattoo style example showing a detailed wolf portrait with shading and texture"
+    },
+    "/styles/minimalist": {
+      src: "/images/tattoos/minimalist-example.svg",
+      alt: "Minimalist tattoo style example showing a delicate fine-line peony flower"
+    },
+    "/body-parts/arm": {
+      src: "/images/tattoos/arm-placement-example.svg",
+      alt: "Arm tattoo placement guide showing shoulder, forearm, and wrist tattoo positions"
+    }
+  };
+
+  const image = src && defaultImages[src] ? defaultImages[src] : { src: src || "", alt: alt || "Tattoo example" };
+
+  return (
+    <figure className="tattoo-example">
+      <img
+        src={image.src}
+        alt={image.alt}
+        width={800}
+        height={500}
+        loading="lazy"
+        style={{ width: "100%", height: "auto", borderRadius: "24px" }}
+      />
+    </figure>
+  );
 }
+
 
 export function ContentCTA({ title, href }: { title: string; href: string }) {
   return (

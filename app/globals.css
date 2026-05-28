@@ -179,3 +179,13 @@ p { color: var(--neutral-300); font-size: 17px; line-height: 1.65; margin: 0; }
   .nav-links { justify-content: flex-start; }
   .card-dark, .card-paper, .generator-panel { padding: 20px; }
 }
+
+.tattoo-example {
+  margin: 24px 0;
+}
+.tattoo-example img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+}

@@ -18,7 +18,7 @@ export default function ArticlePage() {
       <section className="section section-tight">
         <div className="container article-body">
           <section className="stack"><h2>Arm Tattoo Placements</h2><ul><li>Upper arm: strong for larger realism, traditional, or symbolic work.</li><li>Forearm: visible, readable, and useful for designs with clear vertical flow.</li><li>Wrist: best for small minimalist ideas with simple silhouettes.</li><li>Shoulder: good for round compositions and designs that can expand later.</li></ul></section>
-          <ExampleImagePlaceholder />
+          <ExampleImagePlaceholder src="/body-parts/arm" />
           <section className="stack"><h2>What to Know Before Getting an Arm Tattoo</h2><p>Think about visibility, sleeve expansion, sun exposure, and how the design wraps when your arm moves. Bring references, but let your artist adapt the layout to the body.</p></section>
           <ContentCTA title="Generate Your Arm Design" href="/ai-tattoo-generator/?placement=arm" />
         </div>

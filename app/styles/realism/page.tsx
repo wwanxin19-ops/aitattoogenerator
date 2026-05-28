@@ -18,7 +18,7 @@ export default function ArticlePage() {
       <section className="section section-tight">
         <div className="container article-body">
           <section className="stack"><h2>What Is Realism Tattoo Style?</h2><p>Realism tattooing aims to recreate subjects with photographic depth, shading, and proportion. Portraits, animals, statues, flowers, and cinematic scenes are common because they benefit from light and shadow.</p></section><section className="stack"><h2>Best for + popular placements</h2><ul><li>Portraits, animals, mythological figures, and objects with strong texture.</li><li>Upper arm, forearm, shoulder, thigh, and back pieces with enough surface area.</li><li>Ideas where contrast and long-term readability matter more than tiny detail.</li></ul></section>
-          <ExampleImagePlaceholder />
+          <ExampleImagePlaceholder src="/styles/realism" />
           <section className="stack"><h2>How to Get a Realism Tattoo That Lasts</h2><p>Use the generated image as a reference, then ask your artist to adapt contrast, line support, and size for aging on skin. Realism often needs enough room to breathe.</p></section>
           <ContentCTA title="Generate Your Realism Design" href="/ai-tattoo-generator/?style=realism" />
         </div>

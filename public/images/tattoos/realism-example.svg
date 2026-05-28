@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#15120e"/>
+      <stop offset="100%" stop-color="#211c16"/>
+    </linearGradient>
+    <linearGradient id="fur1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c7aa"/>
+      <stop offset="50%" stop-color="#b96a3c"/>
+      <stop offset="100%" stop-color="#7c6c5b"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="500" fill="url(#bg)" rx="24"/>
+  
+  <!-- 狼头轮廓 -->
+  <g fill="none" stroke="url(#fur1)" stroke-width="1.5" opacity="0.9">
+    <!-- 头部轮廓 -->
+    <path d="M400 120 
+             C380 100, 350 110, 330 130
+             C310 150, 300 180, 305 210
+             C310 240, 320 270, 340 295
+             C360 320, 380 340, 400 350
+             C420 340, 440 320, 460 295
+             C480 270, 490 240, 495 210
+             C500 180, 490 150, 470 130
+             C450 110, 420 100, 400 120Z" 
+          stroke-width="2"/>
+    
+    <!-- 左眼 -->
+    <path d="M360 200 C355 195, 350 200, 355 205 C360 210, 365 205, 360 200Z" fill="#b96a3c"/>
+    <!-- 右眼 -->
+    <path d="M440 200 C435 195, 430 200, 435 205 C440 210, 445 205, 440 200Z" fill="#b96a3c"/>
+    
+    <!-- 鼻子 -->
+    <path d="M400 260 L395 275 L400 285 L405 275Z" fill="#b96a3c"/>
+    
+    <!-- 嘴部线条 -->
+    <path d="M400 285 L400 310"/>
+    <path d="M400 310 C385 320, 375 315, 370 305"/>
+    <path d="M400 310 C415 320, 425 315, 430 305"/>
+    
+    <!-- 额头毛发纹理 -->
+    <path d="M380 140 L375 160"/>
+    <path d="M390 135 L388 155"/>
+    <path d="M400 130 L400 150"/>
+    <path d="M410 135 L412 155"/>
+    <path d="M420 140 L425 160"/>
+    
+    <!-- 脸颊毛发纹理 -->
+    <path d="M330 200 C325 220, 328 240, 335 255"/>
+    <path d="M340 210 C338 225, 340 240, 345 250"/>
+    <path d="M470 200 C475 220, 472 240, 465 255"/>
+    <path d="M460 210 C462 225, 460 240, 455 250"/>
+    
+    <!-- 耳朵 -->
+    <path d="M340 130 C330 100, 335 80, 345 75 C355 70, 365 85, 360 110"/>
+    <path d="M460 130 C470 100, 465 80, 455 75 C445 70, 435 85, 440 110"/>
+    
+    <!-- 颈部毛发 -->
+    <path d="M340 295 C330 330, 340 360, 360 380"/>
+    <path d="M355 310 C350 335, 355 360, 370 375"/>
+    <path d="M460 295 C470 330, 460 360, 440 380"/>
+    <path d="M445 310 C450 335, 445 360, 430 375"/>
+  </g>
+  
+  <!-- 装饰性松枝 -->
+  <g fill="none" stroke="#6f7d63" stroke-width="1" opacity="0.6">
+    <path d="M280 350 C260 330, 250 300, 260 270"/>
+    <path d="M260 320 L245 310"/>
+    <path d="M255 300 L240 295"/>
+    <path d="M265 280 L250 275"/>
+    <path d="M520 350 C540 330, 550 300, 540 270"/>
+    <path d="M540 320 L555 310"/>
+    <path d="M545 300 L560 295"/>
+    <path d="M535 280 L550 275"/>
+  </g>
+  
+  <!-- 标签 -->
+  <text x="400" y="450" text-anchor="middle" fill="#a9957d" font-family="monospace" font-size="12" letter-spacing="2">REALISM TATTOO STYLE</text>
+</svg>
