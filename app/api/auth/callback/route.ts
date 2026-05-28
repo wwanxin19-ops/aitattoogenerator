@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // Always redirect to home page after login
+      return NextResponse.redirect(`${origin}/`);
     }
   }
 
