@@ -50,7 +50,7 @@ export default function DashboardPage() {
       <div style={{ padding: 40, textAlign: "center" }}>
         <h1>Please Sign In</h1>
         <p>You need to sign in to view your dashboard.</p>
-        <a href="/" style={{ color: "#ff6b35" }}>Go to Home</a>
+        <Link href="/" style={{ color: "#ff6b35" }}>Go to Home</Link>
       </div>
     );
   }
