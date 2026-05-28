@@ -32,7 +32,7 @@ export function AuthButton() {
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
         setUser({
           id: session.user.id,
           email: session.user.email!,
