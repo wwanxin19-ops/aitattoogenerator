@@ -100,7 +100,7 @@ export default function DashboardPage() {
           <div className="dashboard-card">
             <h2>Please Sign In</h2>
             <p>You need to sign in to view your dashboard.</p>
-            <a href="/" className="btn btn-primary">Go to Home</a>
+            <Link href="/" className="btn btn-primary">Go to Home</Link>
           </div>
         </div>
       </div>
