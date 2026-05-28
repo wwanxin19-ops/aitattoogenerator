@@ -4,7 +4,7 @@ import { ComplianceNote, ContentCTA, ExampleImagePlaceholder, VisualComparison }
 export const metadata: Metadata = {
   title: "Arm Tattoo Ideas",
   description: "Explore arm tattoo ideas from shoulder to wrist, including placement planning and AI-generated reference prompts.",
-  alternates: { canonical: "/body-parts/arm/" }
+  alternates: { canonical: "/body-parts/arm" }
 };
 
 export default function ArticlePage() {

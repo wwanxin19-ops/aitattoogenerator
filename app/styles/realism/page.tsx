@@ -4,7 +4,7 @@ import { ComplianceNote, ContentCTA, ExampleImagePlaceholder, VisualComparison }
 export const metadata: Metadata = {
   title: "Realism Tattoo Ideas",
   description: "Explore realism tattoo ideas, best placements, and how to create AI-generated reference designs that look like photographs.",
-  alternates: { canonical: "/styles/realism/" }
+  alternates: { canonical: "/styles/realism" }
 };
 
 export default function ArticlePage() {

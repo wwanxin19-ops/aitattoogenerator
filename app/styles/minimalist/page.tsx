@@ -4,7 +4,7 @@ import { ComplianceNote, ContentCTA, ExampleImagePlaceholder, VisualComparison }
 export const metadata: Metadata = {
   title: "Minimalist Tattoo Ideas",
   description: "Explore minimalist tattoo ideas, placement tips, and simple AI-generated reference designs built around strong meaning.",
-  alternates: { canonical: "/styles/minimalist/" }
+  alternates: { canonical: "/styles/minimalist" }
 };
 
 export default function ArticlePage() {

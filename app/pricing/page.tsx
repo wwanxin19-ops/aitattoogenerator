@@ -6,7 +6,7 @@ import { ModalButton } from "@/components/ModalButtons";
 export const metadata: Metadata = {
   title: "Pricing — AI Tattoo Generator",
   description: "Simple pricing for free tattoo previews, Pro waitlist access, and Studio early access.",
-  alternates: { canonical: "/pricing/" }
+  alternates: { canonical: "/pricing" }
 };
 
 const faqs: Array<[string, string]> = [

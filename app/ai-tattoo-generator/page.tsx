@@ -4,7 +4,7 @@ import { GeneratorForm } from "@/components/GeneratorForm";
 export const metadata: Metadata = {
   title: "AI Tattoo Generator — See Your Design in 30 Seconds",
   description: "Describe your tattoo idea, choose a style and placement, and create a reference preview in 30 seconds.",
-  alternates: { canonical: "/ai-tattoo-generator/" }
+  alternates: { canonical: "/ai-tattoo-generator" }
 };
 
 export default function GeneratorPage() {
