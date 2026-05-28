@@ -23,7 +23,6 @@ export async function GET() {
       email: user.email,
       name: user.user_metadata?.full_name || user.user_metadata?.name || null,
       avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-      created_at: user.created_at,
     },
   });
 }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
 
 interface User {
   id: string;
@@ -39,30 +38,60 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: 40 }}>Loading...</div>;
+    return (
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (!user) {
     return (
-      <div style={{ padding: 40 }}>
+      <div style={{ padding: 40, textAlign: "center" }}>
         <h1>Please Sign In</h1>
         <p>You need to sign in to view your dashboard.</p>
-        <Link href="/" className="btn btn-primary">Go to Home</Link>
+        <a href="/" style={{ color: "#ff6b35" }}>Go to Home</a>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ padding: 40, maxWidth: 800, margin: "0 auto" }}>
       <h1>Dashboard</h1>
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
+      
+      <div style={{ marginTop: 30, padding: 20, border: "1px solid #333", borderRadius: 8 }}>
         {user.avatar && (
-          <img src={user.avatar} alt="avatar" style={{ width: 60, height: 60, borderRadius: '50%' }} />
+          <img
+            src={user.avatar}
+            alt="avatar"
+            style={{ width: 80, height: 80, borderRadius: "50%", marginBottom: 20 }}
+          />
         )}
-        <p><strong>Name:</strong> {user.name || 'N/A'}</p>
+        <p><strong>Name:</strong> {user.name || "N/A"}</p>
         <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>User ID:</strong> {user.id}</p>
       </div>
-      <button onClick={handleSignOut} className="btn btn-secondary">Sign Out</button>
+
+      <div style={{ marginTop: 30 }}>
+        <h2>Quick Actions</h2>
+        <div style={{ display: "flex", gap: 10, marginTop: 15 }}>
+          <a href="/ai-tattoo-generator" style={{ padding: "10px 20px", background: "#ff6b35", color: "white", textDecoration: "none", borderRadius: 4 }}>
+            Generate Tattoo
+          </a>
+          <a href="/pricing" style={{ padding: "10px 20px", background: "#333", color: "white", textDecoration: "none", borderRadius: 4 }}>
+            View Pricing
+          </a>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 30 }}>
+        <button
+          onClick={handleSignOut}
+          style={{ padding: "10px 20px", background: "#666", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}
+        >
+          Sign Out
+        </button>
+      </div>
     </div>
   );
 }

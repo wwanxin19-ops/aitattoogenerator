@@ -17,23 +17,14 @@ export function AuthButton() {
 
   useEffect(() => {
     const getUser = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error("Auth error:", error.message);
-          setLoading(false);
-          return;
-        }
-        if (user) {
-          setUser({
-            id: user.id,
-            email: user.email!,
-            name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-          });
-        }
-      } catch (err) {
-        console.error("Get user failed:", err);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser({
+          id: user.id,
+          email: user.email!,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        });
       }
       setLoading(false);
     };
@@ -41,7 +32,7 @@ export function AuthButton() {
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+      if (event === "SIGNED_IN" && session?.user) {
         setUser({
           id: session.user.id,
           email: session.user.email!,
@@ -66,23 +57,29 @@ export function AuthButton() {
   };
 
   const handleSignOut = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null);
+    await supabase.auth.signOut();
     window.location.reload();
   };
 
   if (loading) {
-    return <span className="auth-loading">Loading...</span>;
+    return <span style={{ color: "#999" }}>Loading...</span>;
   }
 
   if (user) {
     return (
-      <div className="auth-user">
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {user.avatar && (
-          <img src={user.avatar} alt={user.name || user.email} className="auth-avatar" />
+          <img
+            src={user.avatar}
+            alt={user.name || user.email}
+            style={{ width: 32, height: 32, borderRadius: "50%" }}
+          />
         )}
-        <span className="auth-name">{user.name || user.email}</span>
-        <button onClick={handleSignOut} className="btn btn-secondary">
+        <span style={{ color: "white", fontSize: 14 }}>{user.name || user.email}</span>
+        <button
+          onClick={handleSignOut}
+          style={{ padding: "6px 12px", background: "#666", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
+        >
           Sign Out
         </button>
       </div>
@@ -90,7 +87,10 @@ export function AuthButton() {
   }
 
   return (
-    <button onClick={handleSignIn} className="btn btn-primary">
+    <button
+      onClick={handleSignIn}
+      style={{ padding: "8px 16px", background: "#ff6b35", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 14 }}
+    >
       Sign In with Google
     </button>
   );

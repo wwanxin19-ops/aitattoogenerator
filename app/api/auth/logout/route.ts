@@ -13,5 +13,5 @@ export async function POST() {
     );
   }
 
-  return NextResponse.json({ success: true, data: { message: "Logged out successfully" } });
+  return NextResponse.json({ success: true });
 }

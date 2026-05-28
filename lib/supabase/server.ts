@@ -16,16 +16,14 @@ export async function createClient() {
           try {
             cookieStore.set({ name, value, ...options });
           } catch {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing sessions.
+            // Server Component 中调用 set 会报错，可以忽略
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: "", ...options });
           } catch {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing sessions.
+            // Server Component 中调用 remove 会报错，可以忽略
           }
         },
       },
