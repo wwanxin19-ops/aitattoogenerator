@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect, useCallback } from "react";
 
 interface User {
   id: string;
@@ -13,51 +12,52 @@ interface User {
 export function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setUser({
+            id: json.data.id,
+            email: json.data.email,
+            name: json.data.name || null,
+            avatar: json.data.avatar || null,
+          });
+          return;
+        }
+      }
+      setUser(null);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser({
-          id: user.id,
-          email: user.email!,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        });
-      }
-      setLoading(false);
-    };
+    fetchUser();
+    const interval = setInterval(fetchUser, 30000);
+    return () => clearInterval(interval);
+  }, [fetchUser]);
 
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
-          avatar: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null,
-        });
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
-
-  const handleSignIn = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
-      },
-    });
+  const handleSignIn = () => {
+    window.location.href = "/api/auth/login";
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // ignore
+    }
+    setUser(null);
     window.location.reload();
   };
 
@@ -71,14 +71,24 @@ export function AuthButton() {
         {user.avatar && (
           <img
             src={user.avatar}
-            alt={user.name || user.email}
-            style={{ width: 32, height: 32, borderRadius: "50%" }}
+            alt="avatar"
+            style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }}
           />
         )}
-        <span style={{ color: "white", fontSize: 14 }}>{user.name || user.email}</span>
+        <span style={{ color: "#fff", fontSize: 14 }}>
+          {user.name || user.email}
+        </span>
         <button
           onClick={handleSignOut}
-          style={{ padding: "6px 12px", background: "#666", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
+          style={{
+            background: "transparent",
+            border: "1px solid #ff6b35",
+            color: "#ff6b35",
+            padding: "6px 14px",
+            borderRadius: 6,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
         >
           Sign Out
         </button>
@@ -89,9 +99,18 @@ export function AuthButton() {
   return (
     <button
       onClick={handleSignIn}
-      style={{ padding: "8px 16px", background: "#ff6b35", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 14 }}
+      style={{
+        background: "#ff6b35",
+        border: "none",
+        color: "#fff",
+        padding: "8px 18px",
+        borderRadius: 6,
+        fontSize: 14,
+        fontWeight: 600,
+        cursor: "pointer",
+      }}
     >
-      Sign In with Google
+      Sign In
     </button>
   );
 }

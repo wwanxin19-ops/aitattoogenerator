@@ -1,17 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signOut();
-
-  if (error) {
-    return NextResponse.json(
-      { success: false, error: { code: "LOGOUT_FAILED", message: error.message } },
-      { status: 500 }
-    );
+  try {
+    await fetch("https://aitattoogenerator.cc/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
   }
-
   return NextResponse.json({ success: true });
 }

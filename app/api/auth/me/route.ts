@@ -1,28 +1,32 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = await createClient();
+  try {
+    const res = await fetch("https://aitattoogenerator.cc/api/auth/me", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+    if (!res.ok) {
+      if (res.status === 401) {
+        return NextResponse.json(
+          { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
+          { status: 401 }
+        );
+      }
+      throw new Error(`Backend returned ${res.status}`);
+    }
 
-  if (error || !user) {
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Auth me error:", error);
     return NextResponse.json(
-      { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
-      { status: 401 }
+      { success: false, error: { code: "SERVER_ERROR", message: "Unable to fetch user info." } },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({
-    success: true,
-    data: {
-      id: user.id,
-      email: user.email,
-      name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-      avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-    },
-  });
 }

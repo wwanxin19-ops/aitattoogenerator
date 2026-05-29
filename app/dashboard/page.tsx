@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 
 interface User {
   id: string;
@@ -14,27 +13,46 @@ interface User {
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setUser({
+            id: json.data.id,
+            email: json.data.email,
+            name: json.data.name || null,
+            avatar: json.data.avatar || null,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+      setUser(null);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser({
-          id: user.id,
-          email: user.email!,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        });
-      }
-      setLoading(false);
-    };
-
-    getUser();
-  }, [supabase]);
+    fetchUser();
+  }, [fetchUser]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // ignore
+    }
     window.location.href = "/";
   };
 
@@ -73,22 +91,18 @@ export default function DashboardPage() {
         <p><strong>User ID:</strong> {user.id}</p>
       </div>
 
-      <div style={{ marginTop: 30 }}>
-        <h2>Quick Actions</h2>
-        <div style={{ display: "flex", gap: 10, marginTop: 15 }}>
-          <a href="/ai-tattoo-generator" style={{ padding: "10px 20px", background: "#ff6b35", color: "white", textDecoration: "none", borderRadius: 4 }}>
-            Generate Tattoo
-          </a>
-          <a href="/pricing" style={{ padding: "10px 20px", background: "#333", color: "white", textDecoration: "none", borderRadius: 4 }}>
-            View Pricing
-          </a>
-        </div>
-      </div>
-
-      <div style={{ marginTop: 30 }}>
+      <div style={{ marginTop: 20 }}>
         <button
           onClick={handleSignOut}
-          style={{ padding: "10px 20px", background: "#666", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}
+          style={{
+            background: "#ff6b35",
+            border: "none",
+            color: "#fff",
+            padding: "10px 20px",
+            borderRadius: 6,
+            fontSize: 14,
+            cursor: "pointer",
+          }}
         >
           Sign Out
         </button>
