@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const WORKER_URL = "https://aitattoogenerator.wwanxin19.workers.dev";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Forward to backend
-    const res = await fetch("https://aitattoogenerator.cc/api/generate", {
+    // Forward to Worker directly
+    const res = await fetch(`${WORKER_URL}/api/generate`, {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        "Cookie": request.headers.get("cookie") || "",
       },
       body: JSON.stringify(body),
     });
