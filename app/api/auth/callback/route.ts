@@ -53,16 +53,16 @@ export async function GET(request: NextRequest) {
           maxAge: 604800, // 7 days
         });
       }
-
-      // Clear oauth_state cookie
-      redirectResponse.cookies.set("oauth_state", "", {
-        path: "/",
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        maxAge: 0,
-      });
     }
+
+    // Always clear oauth_state cookie
+    redirectResponse.cookies.set("oauth_state", "", {
+      path: "/",
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 0,
+    });
 
     return redirectResponse;
   } catch (err) {
