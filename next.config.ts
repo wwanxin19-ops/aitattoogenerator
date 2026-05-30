@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         {
+          source: "/api/auth/logout",
+          destination: "/api/auth/logout",
+        },
+        {
           source: "/api/:path*",
           destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/:path*",
         },
