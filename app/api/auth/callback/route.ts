@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
 
     // Forward the session cookie from Worker
     if (setCookie) {
-      // Parse and set the session cookie
       const sessionMatch = setCookie.match(/session=([^;]+)/);
       if (sessionMatch) {
         redirectResponse.cookies.set("session", decodeURIComponent(sessionMatch[1]), {
@@ -55,7 +54,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Always clear oauth_state cookie
+    // Clear oauth_state cookie
     redirectResponse.cookies.set("oauth_state", "", {
       path: "/",
       httpOnly: true,

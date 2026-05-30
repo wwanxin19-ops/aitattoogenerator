@@ -8,33 +8,18 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Local auth routes - bypass Worker
+        // Auth routes handled locally by Next.js (cookie setting required)
         {
-          source: "/api/auth/me",
-          destination: "/api/auth/me-local",
+          source: "/api/auth/:path*",
+          destination: "/api/auth/:path*",
         },
-        {
-          source: "/api/auth/logout",
-          destination: "/api/auth/logout-local",
-        },
-        // All other API routes go to Worker
+        // All other API routes proxy to Worker
         {
           source: "/api/:path*",
           destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/:path*",
         },
       ],
     };
-  },
-  async headers() {
-    return [
-      {
-        source: "/api/:path*",
-        headers: [
-          { key: "Access-Control-Allow-Credentials", value: "true" },
-          { key: "Access-Control-Allow-Origin", value: "https://aitattoogenerator.cc" },
-        ],
-      },
-    ];
   },
 };
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  // Get session cookie
   const sessionCookie = request.cookies.get("session")?.value;
 
   if (!sessionCookie) {
@@ -12,7 +11,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Forward to Worker to verify session
     const workerRes = await fetch(
       "https://aitattoogenerator.wwanxin19.workers.dev/api/auth/me",
       {
