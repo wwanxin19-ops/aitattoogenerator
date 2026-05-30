@@ -85,7 +85,7 @@ function getErrorMessage(code: LeadsErrorCode, message?: string) {
 }
 
 function trackEmailSubmit(source: ModalType) {
-  return fetch("/api/events", {
+  return fetch("/internal/events", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -124,7 +124,7 @@ export function EmailModal({ type, onClose }: EmailModalProps) {
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/leads", {
+      const response = await fetch("/internal/leads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

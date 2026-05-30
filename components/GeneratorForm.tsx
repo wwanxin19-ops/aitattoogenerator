@@ -39,7 +39,7 @@ type PollResponse = {
 const fallbackErrorMessage = "Something went wrong. Please try again.";
 
 function trackGeneratorUse(style: string, placement: string) {
-  return fetch("/api/events", {
+  return fetch("/internal/events", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
