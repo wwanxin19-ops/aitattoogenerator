@@ -22,8 +22,11 @@ export async function GET(request: NextRequest) {
 
   try {
     // Call Worker callback - it will process Google OAuth and return session info
+    // Use redirect: 'manual' to prevent fetch from following the 302 redirect
+    // so we can capture the Set-Cookie header
     const workerUrl = "https://aitattoogenerator.wwanxin19.workers.dev/api/auth/callback";
     const response = await fetch(`${workerUrl}?code=${code}&state=${state}`, {
+      redirect: "manual",
       headers: {
         Cookie: `oauth_state=${state}`,
       },
@@ -36,8 +39,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Worker returns redirect with Set-Cookie header
+    // With redirect: 'manual', we get the 302 response directly
     // We need to extract ALL cookies from the response
-    const setCookieHeaders = response.headers.getSetCookie();
+    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+    
+    // Also try to get single Set-Cookie header as fallback
+    const singleCookie = response.headers.get("set-cookie");
+    if (singleCookie && !setCookieHeaders.includes(singleCookie)) {
+      setCookieHeaders.push(singleCookie);
+    }
     
     // Create redirect response to dashboard
     const redirectResponse = NextResponse.redirect(new URL("/dashboard", request.url));
