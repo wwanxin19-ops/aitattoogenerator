@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Exchange code for token with Worker
+    // Call Worker callback - it will process Google OAuth and return session info
     const workerUrl = "https://aitattoogenerator.wwanxin19.workers.dev/api/auth/callback";
     const response = await fetch(`${workerUrl}?code=${code}&state=${state}`, {
       headers: {
@@ -29,39 +29,44 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get the redirect location and cookies from Worker
+    // Check if Worker returned error redirect
     const location = response.headers.get("location");
-    const setCookie = response.headers.get("set-cookie");
-
     if (location?.includes("error=")) {
       return NextResponse.redirect(new URL(location, request.url));
     }
 
-    // Create response with redirect to dashboard
+    // Worker returns redirect with Set-Cookie header
+    // We need to extract ALL cookies from the response
+    const setCookieHeaders = response.headers.getSetCookie();
+    
+    // Create redirect response to dashboard
     const redirectResponse = NextResponse.redirect(new URL("/dashboard", request.url));
 
-    // Forward the session cookie from Worker
-    if (setCookie) {
-      const sessionMatch = setCookie.match(/session=([^;]+)/);
-      if (sessionMatch) {
-        redirectResponse.cookies.set("session", decodeURIComponent(sessionMatch[1]), {
-          path: "/",
-          httpOnly: true,
-          secure: true,
-          sameSite: "lax",
-          maxAge: 604800, // 7 days
-        });
+    // Forward all cookies from Worker
+    if (setCookieHeaders && setCookieHeaders.length > 0) {
+      for (const cookieStr of setCookieHeaders) {
+        // Parse cookie name and value
+        const match = cookieStr.match(/^([^=]+)=([^;]*)/);
+        if (match) {
+          const [, name, value] = match;
+          // Parse cookie attributes
+          const httpOnly = cookieStr.toLowerCase().includes("httponly");
+          const secure = cookieStr.toLowerCase().includes("secure");
+          const sameSiteMatch = cookieStr.match(/samesite=([^;]+)/i);
+          const sameSite = (sameSiteMatch?.[1]?.toLowerCase() as "lax" | "strict" | "none") || "lax";
+          const maxAgeMatch = cookieStr.match(/max-age=([^;]+)/i);
+          const maxAge = maxAgeMatch ? parseInt(maxAgeMatch[1]) : undefined;
+          
+          redirectResponse.cookies.set(name, decodeURIComponent(value), {
+            path: "/",
+            httpOnly,
+            secure,
+            sameSite,
+            maxAge,
+          });
+        }
       }
     }
-
-    // Always clear oauth_state cookie
-    redirectResponse.cookies.set("oauth_state", "", {
-      path: "/",
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 0,
-    });
 
     return redirectResponse;
   } catch (err) {
