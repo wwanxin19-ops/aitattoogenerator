@@ -2678,7 +2678,7 @@ __name(handleGenerationQueue, "handleGenerationQueue");
 var app = new Hono2();
 app.options("*", () => corsPreflight());
 healthRoutes(app);
-// authRoutes(app);
+authRoutes(app);
 usageRoutes(app);
 generateRoutes(app);
 imageRoutes(app);
