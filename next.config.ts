@@ -6,12 +6,14 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/:path*",
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: "/api/:path*",
+          destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/:path*",
+        },
+      ],
+    };
   },
 };
 
