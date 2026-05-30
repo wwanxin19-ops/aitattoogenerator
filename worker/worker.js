@@ -2318,12 +2318,12 @@ function getSessionCookie(headers) {
 __name(getSessionCookie, "getSessionCookie");
 function setSessionCookie(token, secure) {
   const secureFlag = secure ? "; Secure" : "";
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=604800; Domain=aitattoogenerator.cc`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=604800`;
 }
 __name(setSessionCookie, "setSessionCookie");
 function clearSessionCookie(secure) {
   const secureFlag = secure ? "; Secure" : "";
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=0; Domain=aitattoogenerator.cc`;
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=0`;
 }
 __name(clearSessionCookie, "clearSessionCookie");
 function generateState() {
