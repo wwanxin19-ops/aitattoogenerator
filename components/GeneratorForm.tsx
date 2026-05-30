@@ -87,6 +87,11 @@ function GeneratorForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    
+    if (!prompt.trim()) {
+      setError("Please describe your tattoo idea first.");
+      return;
+    }
     setLoading(true);
     setResult(null);
     setError(null);
@@ -185,7 +190,8 @@ function GeneratorForm() {
         <button 
           type="submit" 
           className="btn btn-primary btn-block"
-          disabled={loading || !prompt.trim()}
+          disabled={loading}
+          aria-disabled={loading}
         >
           {loading ? `Generating... ${progress}%` : "Generate Tattoo"}
         </button>
