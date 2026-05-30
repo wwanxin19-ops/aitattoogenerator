@@ -8,15 +8,23 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Auth routes handled locally by Next.js (cookie setting required)
+        // Only proxy non-auth API routes to Worker
+        // Auth routes (/api/auth/*) are handled by Next.js API Routes
         {
-          source: "/api/auth/:path*",
-          destination: "/api/auth/:path*",
+          source: "/api/ai/:path*",
+          destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/ai/:path*",
         },
-        // All other API routes proxy to Worker
         {
-          source: "/api/:path*",
-          destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/:path*",
+          source: "/api/user/:path*",
+          destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/user/:path*",
+        },
+        {
+          source: "/api/generate/:path*",
+          destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/generate/:path*",
+        },
+        {
+          source: "/api/webhook/:path*",
+          destination: "https://aitattoogenerator.wwanxin19.workers.dev/api/webhook/:path*",
         },
       ],
     };
