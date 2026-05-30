@@ -12,6 +12,11 @@ interface User {
 export function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -39,10 +44,12 @@ export function AuthButton() {
   }, []);
 
   useEffect(() => {
-    fetchUser();
-    const interval = setInterval(fetchUser, 30000);
-    return () => clearInterval(interval);
-  }, [fetchUser]);
+    if (mounted) {
+      fetchUser();
+      const interval = setInterval(fetchUser, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [mounted, fetchUser]);
 
   const handleSignIn = () => {
     window.location.href = "/api/auth/login";
@@ -60,6 +67,27 @@ export function AuthButton() {
     setUser(null);
     window.location.reload();
   };
+
+  // 服务端渲染时不显示 loading，直接显示 Sign In 按钮
+  if (!mounted) {
+    return (
+      <button
+        onClick={handleSignIn}
+        style={{
+          background: "#ff6b35",
+          border: "none",
+          color: "#fff",
+          padding: "8px 18px",
+          borderRadius: 6,
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        Sign In
+      </button>
+    );
+  }
 
   if (loading) {
     return <span style={{ color: "#999" }}>Loading...</span>;
