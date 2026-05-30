@@ -152,6 +152,7 @@ function GeneratorForm() {
             id="prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            onInput={(e) => setPrompt(e.currentTarget.value)}
             placeholder="A fine-line snake wrapped around a peony..."
             rows={4}
             required
