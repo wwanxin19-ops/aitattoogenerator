@@ -34,10 +34,12 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}>
       <body>
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
         <NavBar />
         {children}
         <Footer />
