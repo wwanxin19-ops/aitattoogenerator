@@ -140,7 +140,7 @@ function GeneratorForm() {
       } else if (genResult.status === "failed") {
         setError("生成失败，积分已退还");
       }
-    } catch (err) {
+    } catch {
       setError(fallbackErrorMessage);
     } finally {
       setLoading(false);

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { WORKER_ORIGIN } from "@/lib/worker-proxy";
 
 export async function GET(request: NextRequest) {
   try {
-    const res = await fetch("https://aitattoogenerator.cc/api/usage", {
+    const res = await fetch(`${WORKER_ORIGIN}/api/usage`, {
       method: "GET",
-      credentials: "include",
       headers: {
-        "Content-Type": "application/json",
+        Cookie: request.headers.get("cookie") || "",
       },
+      cache: "no-store",
     });
 
     if (res.status === 401) {

@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/generator",
+        destination: "/ai-tattoo-generator",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

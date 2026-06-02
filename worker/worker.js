@@ -50,7 +50,7 @@ async function getUserCredits(db, userId) {
   const user = await getUserById(db, userId);
   if (!user) return { daily: 0, purchased: 0, total: 0 };
   const now = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-  const resetDate = user.credits_reset_at ? user.credits_reset_at.split("T")[0] : null;
+  const resetDate = user.credits_reset_at ? user.credits_reset_at.split(/[ T]/)[0] : null;
   if (resetDate !== now) {
     await db.prepare(
       "UPDATE users SET credits_daily = 3, credits_reset_at = datetime('now') WHERE id = ?"
