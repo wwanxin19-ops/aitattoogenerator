@@ -22,7 +22,15 @@ __export(db_exports, {
   getUserById: () => getUserById,
   getUserCredits: () => getUserCredits,
   getUserGenerations: () => getUserGenerations,
-  updateGenerationStatus: () => updateGenerationStatus
+  updateGenerationStatus: () => updateGenerationStatus,
+  addPurchasedCredits: () => addPurchasedCredits,
+  createBillingOrder: () => createBillingOrder,
+  getBillingOrderByProviderOrderId: () => getBillingOrderByProviderOrderId,
+  getUserBillingOrders: () => getUserBillingOrders,
+  updateBillingOrderStatus: () => updateBillingOrderStatus,
+  createBillingWebhookEvent: () => createBillingWebhookEvent,
+  getBillingWebhookEvent: () => getBillingWebhookEvent,
+  markBillingWebhookEventProcessed: () => markBillingWebhookEventProcessed
 });
 async function getUserById(db, id) {
   const { results } = await db.prepare("SELECT * FROM users WHERE id = ?").bind(id).all();
@@ -115,6 +123,60 @@ async function createCreditTransaction(db, tx) {
      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
   ).bind(tx.id, tx.user_id, tx.type, tx.amount, tx.balance_after, tx.description).run();
 }
+async function addPurchasedCredits(db, userId, amount, description) {
+  const creditsToAdd = Math.max(0, Number(amount) || 0);
+  if (creditsToAdd <= 0) return null;
+  await db.prepare(
+    "UPDATE users SET credits_purchased = credits_purchased + ? WHERE id = ?"
+  ).bind(creditsToAdd, userId).run();
+  const credits = await getUserCredits(db, userId);
+  await createCreditTransaction(db, {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    type: "purchase",
+    amount: creditsToAdd,
+    balance_after: credits.total,
+    description
+  });
+  return credits;
+}
+async function createBillingOrder(db, order) {
+  await db.prepare(
+    `INSERT INTO billing_orders (id, user_id, provider, provider_order_id, package_id, amount_cents, currency, credits, status, raw_provider_payload, created_at, updated_at)
+     VALUES (?, ?, 'paypal', ?, ?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'))`
+  ).bind(order.id, order.user_id, order.provider_order_id, order.package_id, order.amount_cents, order.currency, order.credits, order.raw_provider_payload || null).run();
+}
+async function getBillingOrderByProviderOrderId(db, providerOrderId) {
+  const { results } = await db.prepare("SELECT * FROM billing_orders WHERE provider = 'paypal' AND provider_order_id = ?").bind(providerOrderId).all();
+  return results?.[0] || null;
+}
+async function getUserBillingOrders(db, userId, limit = 20) {
+  const { results } = await db.prepare(
+    "SELECT * FROM billing_orders WHERE user_id = ? ORDER BY created_at DESC LIMIT ?"
+  ).bind(userId, limit).all();
+  return results || [];
+}
+async function updateBillingOrderStatus(db, providerOrderId, status, captureId = null, rawPayload = null) {
+  const paidAtSql = status === "paid" ? ", paid_at = COALESCE(paid_at, datetime('now'))" : "";
+  await db.prepare(
+    `UPDATE billing_orders SET status = ?, provider_capture_id = COALESCE(?, provider_capture_id), raw_provider_payload = COALESCE(?, raw_provider_payload), updated_at = datetime('now')${paidAtSql} WHERE provider = 'paypal' AND provider_order_id = ?`
+  ).bind(status, captureId, rawPayload, providerOrderId).run();
+}
+async function createBillingWebhookEvent(db, event) {
+  await db.prepare(
+    `INSERT INTO billing_webhook_events (id, provider, provider_event_id, event_type, provider_order_id, processed, raw_payload, created_at)
+     VALUES (?, 'paypal', ?, ?, ?, 0, ?, datetime('now'))`
+  ).bind(event.id, event.provider_event_id, event.event_type, event.provider_order_id || null, event.raw_payload || null).run();
+}
+async function getBillingWebhookEvent(db, providerEventId) {
+  const { results } = await db.prepare("SELECT * FROM billing_webhook_events WHERE provider = 'paypal' AND provider_event_id = ?").bind(providerEventId).all();
+  return results?.[0] || null;
+}
+async function markBillingWebhookEventProcessed(db, providerEventId) {
+  await db.prepare(
+    "UPDATE billing_webhook_events SET processed = 1, processed_at = datetime('now') WHERE provider = 'paypal' AND provider_event_id = ?"
+  ).bind(providerEventId).run();
+}
 var init_db = __esm({
   "src/lib/db.ts"() {
     "use strict";
@@ -129,6 +191,14 @@ var init_db = __esm({
     __name(getGenerationById, "getGenerationById");
     __name(getUserGenerations, "getUserGenerations");
     __name(createCreditTransaction, "createCreditTransaction");
+    __name(addPurchasedCredits, "addPurchasedCredits");
+    __name(createBillingOrder, "createBillingOrder");
+    __name(getBillingOrderByProviderOrderId, "getBillingOrderByProviderOrderId");
+    __name(getUserBillingOrders, "getUserBillingOrders");
+    __name(updateBillingOrderStatus, "updateBillingOrderStatus");
+    __name(createBillingWebhookEvent, "createBillingWebhookEvent");
+    __name(getBillingWebhookEvent, "getBillingWebhookEvent");
+    __name(markBillingWebhookEventProcessed, "markBillingWebhookEventProcessed");
   }
 });
 
@@ -2514,6 +2584,263 @@ function usageRoutes(app2) {
 }
 __name(usageRoutes, "usageRoutes");
 
+// src/routes/billing.ts
+init_db();
+var PAYPAL_PACKAGES = {
+  credits_30: { name: "Starter Pack", credits: 30, amount_cents: 499, currency: "USD" },
+  credits_100: { name: "Creator Pack", credits: 100, amount_cents: 999, currency: "USD" },
+  credits_300: { name: "Pro Pack", credits: 300, amount_cents: 1999, currency: "USD" }
+};
+function paypalBaseUrl(env) {
+  return String(env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase() === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+}
+__name(paypalBaseUrl, "paypalBaseUrl");
+function paypalCheckoutBaseUrl(env) {
+  return String(env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase() === "live" ? "https://www.paypal.com" : "https://www.sandbox.paypal.com";
+}
+__name(paypalCheckoutBaseUrl, "paypalCheckoutBaseUrl");
+function paypalConfigured(env, needWebhook = false) {
+  return Boolean(env.PAYPAL_CLIENT_ID && env.PAYPAL_CLIENT_SECRET && (!needWebhook || env.PAYPAL_WEBHOOK_ID));
+}
+__name(paypalConfigured, "paypalConfigured");
+async function paypalAccessToken(env) {
+  const basic = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
+  const res = await fetch(`${paypalBaseUrl(env)}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "grant_type=client_credentials"
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok || !data?.access_token) {
+    throw new Error(`paypal token ${res.status}: ${text.slice(0, 300)}`);
+  }
+  return data.access_token;
+}
+__name(paypalAccessToken, "paypalAccessToken");
+function paypalOrderIdFromEvent(event) {
+  return event?.resource?.supplementary_data?.related_ids?.order_id || event?.resource?.id || event?.resource?.custom_id || null;
+}
+__name(paypalOrderIdFromEvent, "paypalOrderIdFromEvent");
+function paypalCaptureIdFromEvent(event) {
+  return event?.resource?.id || null;
+}
+__name(paypalCaptureIdFromEvent, "paypalCaptureIdFromEvent");
+async function verifyPaypalWebhook(env, event, headers) {
+  if (!paypalConfigured(env, true)) return false;
+  const accessToken = await paypalAccessToken(env);
+  const payload = {
+    auth_algo: headers.get("paypal-auth-algo"),
+    cert_url: headers.get("paypal-cert-url"),
+    transmission_id: headers.get("paypal-transmission-id"),
+    transmission_sig: headers.get("paypal-transmission-sig"),
+    transmission_time: headers.get("paypal-transmission-time"),
+    webhook_id: env.PAYPAL_WEBHOOK_ID,
+    webhook_event: event
+  };
+  if (!payload.auth_algo || !payload.cert_url || !payload.transmission_id || !payload.transmission_sig || !payload.transmission_time) {
+    return false;
+  }
+  const res = await fetch(`${paypalBaseUrl(env)}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok) {
+    console.log(`PayPal webhook verify failed ${res.status}: ${text.slice(0, 300)}`);
+    return false;
+  }
+  return data?.verification_status === "SUCCESS";
+}
+__name(verifyPaypalWebhook, "verifyPaypalWebhook");
+async function createPaypalOrder(env, packageId, pkg, userId, localOrderId) {
+  const accessToken = await paypalAccessToken(env);
+  const appOrigin = env.APP_ORIGIN || "https://aitattoogenerator.cc";
+  const amount = (pkg.amount_cents / 100).toFixed(2);
+  const res = await fetch(`${paypalBaseUrl(env)}/v2/checkout/orders`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "PayPal-Request-Id": localOrderId
+    },
+    body: JSON.stringify({
+      intent: "CAPTURE",
+      purchase_units: [{
+        reference_id: localOrderId,
+        custom_id: localOrderId,
+        description: `${pkg.name} - ${pkg.credits} AI Tattoo Generator credits`,
+        amount: { currency_code: pkg.currency, value: amount },
+        items: [{
+          name: pkg.name,
+          quantity: "1",
+          unit_amount: { currency_code: pkg.currency, value: amount },
+          category: "DIGITAL_GOODS"
+        }]
+      }],
+      payment_source: {
+        paypal: {
+          experience_context: {
+            payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+            brand_name: "AI Tattoo Generator",
+            locale: "en-US",
+            landing_page: "LOGIN",
+            shipping_preference: "NO_SHIPPING",
+            user_action: "PAY_NOW",
+            return_url: `${appOrigin}/billing/success?provider=paypal`,
+            cancel_url: `${appOrigin}/billing/cancel`
+          }
+        }
+      }
+    })
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok || !data?.id) {
+    throw new Error(`paypal create order ${res.status}: ${text.slice(0, 300)}`);
+  }
+  let approvalUrl = data.links?.find((link) => link.rel === "payer-action")?.href || data.links?.find((link) => link.rel === "approve")?.href || null;
+  if (!approvalUrl) approvalUrl = `${paypalCheckoutBaseUrl(env)}/checkoutnow?token=${encodeURIComponent(data.id)}`;
+  return { data, approvalUrl };
+}
+__name(createPaypalOrder, "createPaypalOrder");
+async function processPaypalWebhookEvent(env, event, rawText) {
+  const eventId = event?.id;
+  const eventType = event?.event_type;
+  const providerOrderId = paypalOrderIdFromEvent(event);
+  if (!eventId || !eventType) {
+    return { ignored: true, reason: "missing event id/type" };
+  }
+  const existingEvent = await getBillingWebhookEvent(env.D1, eventId);
+  if (existingEvent?.processed) {
+    return { duplicate: true };
+  }
+  if (!existingEvent) {
+    try {
+      await createBillingWebhookEvent(env.D1, {
+        id: crypto.randomUUID(),
+        provider_event_id: eventId,
+        event_type: eventType,
+        provider_order_id: providerOrderId,
+        raw_payload: rawText
+      });
+    } catch (err) {
+      const afterInsert = await getBillingWebhookEvent(env.D1, eventId);
+      if (afterInsert?.processed) return { duplicate: true };
+    }
+  }
+  if (!providerOrderId) {
+    await markBillingWebhookEventProcessed(env.D1, eventId);
+    return { ignored: true, reason: "missing order id" };
+  }
+  const order = await getBillingOrderByProviderOrderId(env.D1, providerOrderId);
+  if (!order) {
+    return { ignored: true, reason: "billing order not found" };
+  }
+  const captureId = paypalCaptureIdFromEvent(event);
+  if (eventType === "PAYMENT.CAPTURE.COMPLETED") {
+    if (order.status !== "paid") {
+      await addPurchasedCredits(env.D1, order.user_id, order.credits, `PayPal purchase ${order.package_id} (${providerOrderId})`);
+      await updateBillingOrderStatus(env.D1, providerOrderId, "paid", captureId, rawText);
+    }
+    await markBillingWebhookEventProcessed(env.D1, eventId);
+    return { processed: true, status: "paid" };
+  }
+  if (eventType === "PAYMENT.CAPTURE.DENIED" || eventType === "CHECKOUT.ORDER.VOIDED") {
+    await updateBillingOrderStatus(env.D1, providerOrderId, "failed", captureId, rawText);
+    await markBillingWebhookEventProcessed(env.D1, eventId);
+    return { processed: true, status: "failed" };
+  }
+  if (eventType === "CHECKOUT.ORDER.CANCELLED") {
+    await updateBillingOrderStatus(env.D1, providerOrderId, "cancelled", captureId, rawText);
+    await markBillingWebhookEventProcessed(env.D1, eventId);
+    return { processed: true, status: "cancelled" };
+  }
+  if (eventType === "PAYMENT.CAPTURE.REFUNDED") {
+    await updateBillingOrderStatus(env.D1, providerOrderId, "refunded", captureId, rawText);
+    await markBillingWebhookEventProcessed(env.D1, eventId);
+    return { processed: true, status: "refunded" };
+  }
+  await markBillingWebhookEventProcessed(env.D1, eventId);
+  return { ignored: true, event_type: eventType };
+}
+__name(processPaypalWebhookEvent, "processPaypalWebhookEvent");
+function billingRoutes(app2) {
+  app2.post("/api/billing/paypal/create-order", async (c) => {
+    const sessionToken = getSessionCookie(c.req.raw.headers);
+    if (!sessionToken) return error("UNAUTHORIZED", "Not authenticated", 401);
+    const userId = await verifySession(sessionToken, c.env.SESSION_SECRET);
+    if (!userId) return error("UNAUTHORIZED", "Invalid session", 401);
+    const body = await c.req.json().catch(() => null);
+    const packageId = body?.package_id;
+    const pkg = PAYPAL_PACKAGES[packageId];
+    if (!pkg) return error("INVALID_PACKAGE", "Invalid credit package", 400);
+    if (!paypalConfigured(c.env)) return error("PAYPAL_NOT_CONFIGURED", "PayPal is not configured", 503);
+    const localOrderId = crypto.randomUUID();
+    try {
+      const paypalOrder = await createPaypalOrder(c.env, packageId, pkg, userId, localOrderId);
+      await createBillingOrder(c.env.D1, {
+        id: localOrderId,
+        user_id: userId,
+        provider_order_id: paypalOrder.data.id,
+        package_id: packageId,
+        amount_cents: pkg.amount_cents,
+        currency: pkg.currency,
+        credits: pkg.credits,
+        raw_provider_payload: JSON.stringify(paypalOrder.data)
+      });
+      return success({ order_id: paypalOrder.data.id, approval_url: paypalOrder.approvalUrl });
+    } catch (err) {
+      console.log(`PayPal create-order failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error("PAYPAL_ORDER_CREATE_FAILED", "Unable to create PayPal order", 502);
+    }
+  });
+  app2.get("/api/billing/history", async (c) => {
+    const sessionToken = getSessionCookie(c.req.raw.headers);
+    if (!sessionToken) return error("UNAUTHORIZED", "Not authenticated", 401);
+    const userId = await verifySession(sessionToken, c.env.SESSION_SECRET);
+    if (!userId) return error("UNAUTHORIZED", "Invalid session", 401);
+    const orders = await getUserBillingOrders(c.env.D1, userId, 20);
+    return success({
+      orders: orders.map((order) => ({
+        id: order.id,
+        provider: order.provider,
+        package_id: order.package_id,
+        amount_cents: order.amount_cents,
+        currency: order.currency,
+        credits: order.credits,
+        status: order.status,
+        created_at: toIsoDateTime(order.created_at),
+        paid_at: toIsoDateTime(order.paid_at)
+      }))
+    });
+  });
+  const webhookHandler = async (c) => {
+    if (!paypalConfigured(c.env, true)) return error("PAYPAL_NOT_CONFIGURED", "PayPal is not configured", 503);
+    const rawText = await c.req.text();
+    let event = null;
+    try { event = rawText ? JSON.parse(rawText) : null; } catch { return error("INVALID_WEBHOOK_PAYLOAD", "Invalid webhook payload", 400); }
+    const verified = await verifyPaypalWebhook(c.env, event, c.req.raw.headers);
+    if (!verified) return error("INVALID_WEBHOOK_SIGNATURE", "Invalid PayPal webhook signature", 401);
+    const result = await processPaypalWebhookEvent(c.env, event, rawText);
+    return success({ received: true, ...result });
+  };
+  app2.post("/api/billing/paypal/webhook", webhookHandler);
+  app2.post("/api/webhooks/paypal", webhookHandler);
+}
+__name(billingRoutes, "billingRoutes");
+
 // src/routes/generate.ts
 init_db();
 function generateRoutes(app2) {
@@ -2779,6 +3106,7 @@ app.options("*", () => corsPreflight());
 healthRoutes(app);
 authRoutes(app);
 usageRoutes(app);
+billingRoutes(app);
 generateRoutes(app);
 imageRoutes(app);
 app.notFound(() => {
