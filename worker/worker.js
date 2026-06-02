@@ -61,15 +61,25 @@ async function getUserCredits(db, userId) {
 }
 async function deductCredits(db, userId, amount) {
   const credits = await getUserCredits(db, userId);
+  if (amount <= 0) return { ok: true, dailyDeduction: 0, purchasedDeduction: 0, balanceAfter: credits.total };
   if (credits.total < amount) return false;
   let remaining = amount;
-  let dailyDeduction = Math.min(credits.daily, remaining);
+  const dailyDeduction = Math.min(credits.daily, remaining);
   remaining -= dailyDeduction;
-  let purchasedDeduction = remaining;
+  const purchasedDeduction = remaining;
+  const balanceAfter = credits.total - amount;
   await db.prepare(
     "UPDATE users SET credits_daily = credits_daily - ?, credits_purchased = credits_purchased - ? WHERE id = ?"
   ).bind(dailyDeduction, purchasedDeduction, userId).run();
-  return true;
+  return { ok: true, dailyDeduction, purchasedDeduction, balanceAfter };
+}
+async function refundCredits(db, userId, dailyAmount = 0, purchasedAmount = 0) {
+  const dailyRefund = Math.max(0, Number(dailyAmount) || 0);
+  const purchasedRefund = Math.max(0, Number(purchasedAmount) || 0);
+  if (dailyRefund === 0 && purchasedRefund === 0) return;
+  await db.prepare(
+    "UPDATE users SET credits_daily = credits_daily + ?, credits_purchased = credits_purchased + ? WHERE id = ?"
+  ).bind(dailyRefund, purchasedRefund, userId).run();
 }
 async function createGeneration(db, gen) {
   await db.prepare(
@@ -81,6 +91,13 @@ async function updateGenerationStatus(db, id, status, imageUrl) {
   await db.prepare(
     "UPDATE generations SET status = ?, image_url = ?, completed_at = datetime('now') WHERE id = ?"
   ).bind(status, imageUrl, id).run();
+}
+function toIsoDateTime(value) {
+  if (!value) return null;
+  const raw = String(value);
+  const isoCandidate = raw.includes("T") ? raw : raw.replace(" ", "T") + "Z";
+  const date = new Date(isoCandidate);
+  return Number.isNaN(date.getTime()) ? raw : date.toISOString();
 }
 async function getGenerationById(db, id) {
   const { results } = await db.prepare("SELECT * FROM generations WHERE id = ?").bind(id).all();
@@ -2489,7 +2506,8 @@ function usageRoutes(app2) {
         placement: g.placement,
         status: g.status,
         image_url: g.image_url,
-        created_at: g.created_at
+        created_at: toIsoDateTime(g.created_at),
+        completed_at: toIsoDateTime(g.completed_at)
       }))
     });
   });
@@ -2509,10 +2527,15 @@ function generateRoutes(app2) {
       return error("UNAUTHORIZED", "Invalid session", 401);
     }
     const body = await c.req.json().catch(() => null);
-    if (!body || !body.prompt) {
-      return error("INVALID_INPUT", "Prompt is required", 400);
+    if (!body || typeof body.prompt !== "string" || !body.prompt.trim()) {
+      return error("INVALID_PROMPT", "Prompt is required", 400);
     }
-    const { prompt, style = "minimalist", placement = "arm" } = body;
+    const prompt = body.prompt.trim();
+    if (prompt.length > 1200) {
+      return error("INVALID_PROMPT", "Prompt must be 1200 characters or less", 400);
+    }
+    const style = typeof body.style === "string" && body.style.trim() ? body.style.trim() : "minimalist";
+    const placement = typeof body.placement === "string" && body.placement.trim() ? body.placement.trim() : "arm";
     const credits = await getUserCredits(c.env.D1, userId);
     if (credits.total < 1) {
       return error("INSUFFICIENT_CREDITS", "Not enough credits", 403);
@@ -2537,18 +2560,20 @@ function generateRoutes(app2) {
         prompt,
         style,
         placement,
-        creditsUsed: 1
+        creditsUsed: 1,
+        dailyDeduction: deducted.dailyDeduction || 0,
+        purchasedDeduction: deducted.purchasedDeduction || 0
       });
       return success({
         id: genId,
         status: "pending",
-        message: "Generation queued",
-        credits_remaining: credits.total - 1
+        message: "Generation started",
+        credits_remaining: deducted.balanceAfter ?? credits.total - 1
       });
     } catch {
-      await deductCredits(c.env.D1, userId, -1);
+      await refundCredits(c.env.D1, userId, deducted.dailyDeduction || 0, deducted.purchasedDeduction || 0);
       await updateGenerationStatus(c.env.D1, genId, "failed", null);
-      return error("QUEUE_ERROR", "Failed to queue generation", 500);
+      return error("SERVER_ERROR", "Failed to queue generation", 500);
     }
   });
   app2.get("/api/generate/:id", async (c) => {
@@ -2576,8 +2601,8 @@ function generateRoutes(app2) {
       prompt: gen.prompt,
       style: gen.style,
       placement: gen.placement,
-      created_at: gen.created_at,
-      completed_at: gen.completed_at
+      created_at: toIsoDateTime(gen.created_at),
+      completed_at: toIsoDateTime(gen.completed_at)
     });
   });
 }
@@ -2616,63 +2641,137 @@ __name(imageRoutes, "imageRoutes");
 
 // src/queue-consumer.ts
 init_db();
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function failGeneration(env, genId, userId, dailyDeduction, purchasedDeduction, reason) {
+  console.log(`Generation failed ${genId}: ${reason}`);
+  await refundCredits(env.D1, userId, dailyDeduction || 0, purchasedDeduction || 0);
+  await updateGenerationStatus(env.D1, genId, "failed", null);
+}
+async function callFalImageGeneration(env, prompt, style, placement) {
+  const tattooPrompt = [
+    "High quality tattoo flash design, clean isolated artwork, white background",
+    `subject: ${prompt}`,
+    `style: ${style}`,
+    `body placement reference: ${placement}`,
+    "professional tattoo stencil concept, crisp lines, no text, no watermark"
+  ].join(". ");
+  const requestBody = {
+    prompt: tattooPrompt,
+    image_size: "square_hd",
+    num_images: 1,
+    enable_safety_checker: true
+  };
+  const submit = await fetch("https://queue.fal.run/fal-ai/flux/schnell", {
+    method: "POST",
+    headers: {
+      "Authorization": `Key ${env.FAL_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(requestBody)
+  });
+  const submitText = await submit.text();
+  let submitData = null;
+  try {
+    submitData = submitText ? JSON.parse(submitText) : null;
+  } catch {
+    submitData = null;
+  }
+  if (!submit.ok) {
+    throw new Error(`fal submit ${submit.status}: ${submitText.slice(0, 300)}`);
+  }
+  if (submitData?.images?.[0]?.url) {
+    return submitData.images[0].url;
+  }
+  const responseUrl = submitData?.response_url;
+  const statusUrl = submitData?.status_url;
+  if (!responseUrl && !statusUrl) {
+    throw new Error(`fal response missing image/result URL: ${submitText.slice(0, 300)}`);
+  }
+  for (let attempt = 0; attempt < 24; attempt++) {
+    await sleep(attempt < 4 ? 1500 : 2500);
+    if (statusUrl) {
+      const statusRes = await fetch(statusUrl, {
+        headers: { "Authorization": `Key ${env.FAL_KEY}` }
+      });
+      const statusText = await statusRes.text();
+      let statusData = null;
+      try {
+        statusData = statusText ? JSON.parse(statusText) : null;
+      } catch {
+        statusData = null;
+      }
+      const status = statusData?.status;
+      if (status === "COMPLETED") break;
+      if (status === "FAILED" || status === "ERROR") {
+        throw new Error(`fal status ${status}: ${statusText.slice(0, 300)}`);
+      }
+    }
+    if (responseUrl) {
+      const resultRes = await fetch(responseUrl, {
+        headers: { "Authorization": `Key ${env.FAL_KEY}` }
+      });
+      const resultText = await resultRes.text();
+      if (resultRes.status === 202 || resultRes.status === 404) continue;
+      let resultData = null;
+      try {
+        resultData = resultText ? JSON.parse(resultText) : null;
+      } catch {
+        resultData = null;
+      }
+      if (!resultRes.ok) {
+        throw new Error(`fal result ${resultRes.status}: ${resultText.slice(0, 300)}`);
+      }
+      const imageUrl = resultData?.images?.[0]?.url || resultData?.image?.url || resultData?.url || null;
+      if (imageUrl) return imageUrl;
+    }
+  }
+  if (responseUrl) {
+    const finalRes = await fetch(responseUrl, {
+      headers: { "Authorization": `Key ${env.FAL_KEY}` }
+    });
+    const finalText = await finalRes.text();
+    let finalData = null;
+    try {
+      finalData = finalText ? JSON.parse(finalText) : null;
+    } catch {
+      finalData = null;
+    }
+    const imageUrl = finalData?.images?.[0]?.url || finalData?.image?.url || finalData?.url || null;
+    if (finalRes.ok && imageUrl) return imageUrl;
+    throw new Error(`fal timed out/no image: ${finalRes.status} ${finalText.slice(0, 300)}`);
+  }
+  throw new Error("fal timed out before completion");
+}
 async function handleGenerationQueue(batch, env) {
   for (const message of batch.messages) {
-    const { genId, userId, prompt, style, placement } = message.body;
+    const { genId, userId, prompt, style, placement, dailyDeduction = 0, purchasedDeduction = 0 } = message.body;
     try {
-      const falRes = await fetch("https://queue.fal.run/fal-ai/flux/schnell", {
-        method: "POST",
-        headers: {
-          "Authorization": `Key ${env.FAL_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt: `Tattoo design: ${prompt}, style: ${style}, placement: ${placement}`,
-          image_size: "square"
-        })
-      });
-      if (!falRes.ok) {
-        await deductCredits(env.D1, userId, -1);
-        await updateGenerationStatus(env.D1, genId, "failed", null);
-        message.ack();
-        continue;
-      }
-      const falData = await falRes.json();
-      const falImageUrl = falData.images?.[0]?.url || null;
-      if (!falImageUrl) {
-        await deductCredits(env.D1, userId, -1);
-        await updateGenerationStatus(env.D1, genId, "failed", null);
-        message.ack();
-        continue;
-      }
+      const falImageUrl = await callFalImageGeneration(env, prompt, style, placement);
       const imageRes = await fetch(falImageUrl);
       if (!imageRes.ok) {
-        await deductCredits(env.D1, userId, -1);
-        await updateGenerationStatus(env.D1, genId, "failed", null);
-        message.ack();
-        continue;
+        throw new Error(`image download ${imageRes.status}`);
       }
       const imageBuffer = await imageRes.arrayBuffer();
       const contentType = imageRes.headers.get("content-type") || "image/png";
-      const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
+      const ext = contentType.includes("webp") ? "webp" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
       const r2Key = `generations/${userId}/${genId}.${ext}`;
       await env.R2.put(r2Key, imageBuffer, {
         httpMetadata: { contentType },
-        customMetadata: { userId, generationId: genId, prompt, style, placement }
+        customMetadata: { userId, generationId: genId, style, placement }
       });
-      const imageUrl = `${env.APP_ORIGIN}/api/images/${r2Key}`;
+      const imageUrl = `${env.APP_ORIGIN || "https://aitattoogenerator.cc"}/api/images/${r2Key}`;
       await updateGenerationStatus(env.D1, genId, "completed", imageUrl);
       message.ack();
-    } catch {
-      await deductCredits(env.D1, userId, -1).catch(() => {
-      });
-      await updateGenerationStatus(env.D1, genId, "failed", null).catch(() => {
+    } catch (err) {
+      await failGeneration(env, genId, userId, dailyDeduction, purchasedDeduction, err instanceof Error ? err.message : String(err)).catch((refundErr) => {
+        console.log(`Generation refund/update failed ${genId}: ${refundErr instanceof Error ? refundErr.message : String(refundErr)}`);
       });
       message.ack();
     }
   }
-}
-__name(handleGenerationQueue, "handleGenerationQueue");
+}__name(handleGenerationQueue, "handleGenerationQueue");
 
 // src/worker.ts
 var app = new Hono2();
