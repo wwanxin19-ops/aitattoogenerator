@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { BillingOverview } from "@/components/Billing";
 
 type User = {
   id: string;
@@ -153,18 +154,22 @@ export default function DashboardPage() {
             <span className="credit-label">Available</span>
           </div>
         </div>
-        <p className="plan-badge">Free plan includes 3 daily tattoo reference generations.</p>
-        <Link className="btn btn-primary upgrade-btn" href="/pricing/">View Pro Waitlist</Link>
+        <p className="plan-badge">Free plan includes 3 daily tattoo reference generations. Purchased credits are added on top.</p>
+        <Link className="btn btn-primary upgrade-btn" href="/pricing/">Buy More Credits</Link>
       </section>
 
       <section className="dashboard-card" aria-labelledby="actions-heading">
         <h2 id="actions-heading">Quick actions</h2>
         <div className="quick-actions">
           <Link className="btn btn-primary" href="/ai-tattoo-generator/">Generate a tattoo</Link>
+          <Link className="btn btn-secondary" href="/pricing/">Buy credits</Link>
+          <Link className="btn btn-secondary" href="/dashboard/billing/">Billing history</Link>
           <Link className="btn btn-secondary" href="/styles/realism/">Explore realism</Link>
           <Link className="btn btn-secondary" href="/styles/minimalist/">Explore minimalist</Link>
         </div>
       </section>
+
+      <BillingOverview compact />
 
       <section className="dashboard-card" aria-labelledby="history-heading">
         <h2 id="history-heading">Recent generations</h2>

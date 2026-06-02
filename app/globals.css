@@ -431,3 +431,67 @@ input, textarea, select {
   font-size: 14px;
   color: var(--neutral-300);
 }
+
+/* Billing styles */
+.credit-pack-count {
+  color: var(--copper-600);
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.billing-status-card {
+  min-height: 58vh;
+  justify-content: center;
+}
+
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.billing-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.billing-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--divider);
+  border-radius: 14px;
+  background: rgba(244, 233, 216, 0.04);
+}
+
+.status-paid {
+  background: rgba(111, 125, 99, 0.2);
+  color: var(--sage-500);
+}
+
+.status-cancelled,
+.status-refunded {
+  background: rgba(244, 233, 216, 0.12);
+  color: var(--neutral-300);
+}
+
+.error-message a {
+  color: var(--copper-500);
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .billing-history-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

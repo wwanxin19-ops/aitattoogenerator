@@ -1,73 +1,52 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FAQAccordion } from "@/components/Shared";
-import { ModalButton } from "@/components/ModalButtons";
+import { PayPalCreditPackages } from "@/components/Billing";
 
 export const metadata: Metadata = {
-  title: "Pricing — AI Tattoo Generator",
-  description: "Simple pricing for free tattoo previews, Pro waitlist access, and Studio early access.",
+  title: "Pricing — Buy Tattoo Generation Credits",
+  description: "Buy one-time PayPal credit packs for AI tattoo generation. No subscription required.",
   alternates: { canonical: "/pricing" }
 };
 
 const faqs: Array<[string, string]> = [
-  ["Can I pay for Pro today?", "No. This week, Pro and Studio buttons collect email interest only and do not open Stripe."],
-  ["What does Free include?", "Free lets you start designing and explore tattoo reference ideas before choosing paid features later."],
-  ["Who is Studio for?", "Studio is intended for tattoo shops and professional designers who want early access and custom setup."]
+  ["Is this a subscription?", "No. The current MVP sells one-time PayPal credit packs only. There is no automatic renewal."],
+  ["When do credits appear?", "After PayPal payment, the backend confirms the webhook and adds purchased credits. This can take a few seconds."],
+  ["Can the success page add credits directly?", "No. Credits are only issued by the backend after PayPal webhook confirmation."],
+  ["What does Free include?", "Free users still receive daily credits for tattoo reference generation. Purchased credits are added on top."]
 ];
 
 export default function PricingPage() {
   return (
     <main>
       <section className="container article-hero stack">
-        <span className="eyebrow">Pricing</span>
-        <h1>Simple Pricing for Every Stage of Your Tattoo Journey</h1>
-        <p className="lead">Start free today. Pro and Studio are waitlist-only this week, with no payment or Stripe checkout.</p>
-      </section>
-      <section className="section section-tight">
-        <div className="container pricing-grid">
-          <article className="card-paper stack">
-            <span className="badge">Free</span>
-            <h2>Free</h2>
-            <div className="price">$0</div>
-            <p>Explore tattoo reference ideas before you commit.</p>
-            <ul className="feature-list">
-              <li>3 free designs daily</li><li>No signup required</li><li>Reference-first workflow</li>
-            </ul>
-            <Link className="btn btn-primary btn-block" href="/ai-tattoo-generator/">Start Designing Free</Link>
-          </article>
-          <article className="card-paper stack plan-recommended">
-            <span className="badge">Best value</span>
-            <h2>Pro</h2>
-            <div className="price">$7.9/month</div>
-            <p>Or $79/year (save $15.8). Join the waitlist for HD downloads, more generations, and design history.</p>
-            <ul className="feature-list">
-              <li>HD downloads planned</li><li>More generations planned</li><li>Design history planned</li>
-            </ul>
-            <ModalButton type="pro" block>Join Pro Waitlist</ModalButton>
-          </article>
-          <article className="card-paper stack">
-            <span className="badge">Studio</span>
-            <h2>Studio</h2>
-            <div className="price">$19.9/month</div>
-            <p>Or $199/year (save $39.8). Built for tattoo shops and professional design workflows.</p>
-            <ul className="feature-list">
-              <li>Early access + custom setup</li><li>Studio workflow planning</li><li>Professional use cases</li>
-            </ul>
-            <ModalButton type="studio" block>Contact for Studio</ModalButton>
-          </article>
+        <span className="eyebrow">Credits Pricing</span>
+        <h1>Buy Tattoo Generation Credits with PayPal</h1>
+        <p className="lead">Choose a one-time credits pack. No subscription, no auto-renewal, and credits are issued only after backend PayPal webhook confirmation.</p>
+        <div className="quick-actions">
+          <Link className="btn btn-secondary" href="/dashboard/billing/">View Billing</Link>
+          <Link className="btn btn-secondary" href="/ai-tattoo-generator/">Generate Tattoo</Link>
         </div>
       </section>
+
+      <section className="section section-tight">
+        <div className="container">
+          <PayPalCreditPackages />
+        </div>
+      </section>
+
       <section className="section section-tight">
         <div className="container grid-2">
-          <div className="stack"><span className="eyebrow">FAQ</span><h2>Pricing questions</h2></div>
+          <div className="stack"><span className="eyebrow">FAQ</span><h2>PayPal credits questions</h2></div>
           <FAQAccordion items={faqs} />
         </div>
       </section>
+
       <section className="section section-tight">
         <div className="container grid-3">
-          <article className="card-dark"><h3>No payment this week</h3><p>Pro and Studio CTAs collect email interest only.</p></article>
-          <article className="card-dark"><h3>Reference-first</h3><p>Designs are inspiration to discuss with a licensed artist.</p></article>
-          <article className="card-dark"><h3>Clear next step</h3><p>Start free, then join the relevant waitlist when ready.</p></article>
+          <article className="card-dark"><h3>Webhook first</h3><p>The success page never grants credits directly. Backend PayPal webhook confirmation is the source of truth.</p></article>
+          <article className="card-dark"><h3>One-time packs</h3><p>This MVP only supports credit purchases. Subscriptions, coupons, invoices, and team accounts stay out of scope.</p></article>
+          <article className="card-dark"><h3>Credits stack</h3><p>Purchased credits appear alongside daily credits in Dashboard and Billing.</p></article>
         </div>
       </section>
     </main>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { trackCTAClick } from "@/lib/analytics";
 import { ComplianceNote } from "@/components/Shared";
@@ -59,6 +60,7 @@ function GeneratorForm() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ imageUrl: string; prompt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
   async function pollGeneration(genId: string, maxAttempts = 30): Promise<PollResponse["data"] | null> {
@@ -95,6 +97,7 @@ function GeneratorForm() {
     setLoading(true);
     setResult(null);
     setError(null);
+    setErrorCode(null);
     setProgress(0);
 
     try {
@@ -118,10 +121,12 @@ function GeneratorForm() {
           return;
         }
         if (data.error.code === "INSUFFICIENT_CREDITS") {
-          setError("积分不足，请明天再来或升级 Pro");
+          setError("You’re out of credits. Buy more credits to continue generating tattoo designs.");
+          setErrorCode(data.error.code);
           return;
         }
         setError(data.error.message || fallbackErrorMessage);
+        setErrorCode(data.error.code || null);
         return;
       }
 
@@ -198,7 +203,10 @@ function GeneratorForm() {
       </form>
 
       {error && (
-        <div className="error-message" role="alert">{error}</div>
+        <div className="error-message" role="alert">
+          <p>{error}</p>
+          {errorCode === "INSUFFICIENT_CREDITS" && <Link href="/pricing/">Buy Credits</Link>}
+        </div>
       )}
 
       {result && (

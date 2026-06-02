@@ -17,6 +17,7 @@ export default function HomePage() {
           <p className="lead">Turn a rough tattoo idea into a clear visual reference you can refine, compare, and bring to a licensed tattoo artist.</p>
           <div className="actions">
             <Link className="btn btn-primary" href="/ai-tattoo-generator/">Start Designing Free</Link>
+            <Link className="btn btn-secondary" href="/pricing/">Buy credits</Link>
             <Link className="btn btn-secondary" href="/styles/realism/">Explore styles</Link>
           </div>
           <p className="trust-line">No signup required. 3 free designs daily.</p>
