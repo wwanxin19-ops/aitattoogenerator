@@ -149,6 +149,11 @@ p { color: var(--neutral-300); font-size: 17px; line-height: 1.65; margin: 0; }
 }
 .compliance-note { border-left: 3px solid var(--sage-500); border-radius: 14px; background: rgba(244, 233, 216, 0.06); padding: 14px 16px; color: var(--neutral-300); font-size: 13px; line-height: 1.55; }
 .tool-compliance { color: var(--neutral-700); background: rgba(111, 125, 99, 0.11); border-left-color: var(--sage-500); }
+.result-section { display: grid; gap: 16px; margin-top: 22px; }
+.result-image { width: 100%; border-radius: 18px; border: 1px solid rgba(23, 19, 15, 0.14); }
+.result-prompt { color: var(--neutral-700); font-size: 15px; }
+.result-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.result-actions .btn { flex: 1 1 180px; }
 
 .footer { border-top: 1px solid var(--divider); padding: 42px 0; color: var(--neutral-400); }
 .footer-grid { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }

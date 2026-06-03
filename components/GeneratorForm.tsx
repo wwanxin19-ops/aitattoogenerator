@@ -87,9 +87,7 @@ function GeneratorForm() {
     throw new Error("Generation timed out");
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    
+  async function runGeneration(source: "generator_form" | "result_regenerate" = "generator_form") {
     if (!prompt.trim()) {
       setError("Please describe your tattoo idea first.");
       return;
@@ -102,7 +100,7 @@ function GeneratorForm() {
 
     try {
       trackGeneratorUse(style, placement);
-      trackCTAClick("generate", "generator_form");
+      trackCTAClick(source === "result_regenerate" ? "regenerate" : "generate", source);
 
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -133,7 +131,7 @@ function GeneratorForm() {
       const genResult = await pollGeneration(data.data.id);
       
       if (!genResult) {
-        setError("生成超时，请重试");
+        setError("Generation timed out. Please try again.");
         return;
       }
       
@@ -143,7 +141,7 @@ function GeneratorForm() {
           prompt: genResult.prompt
         });
       } else if (genResult.status === "failed") {
-        setError("生成失败，积分已退还");
+        setError("Generation failed. Your credit has been returned.");
       }
     } catch {
       setError(fallbackErrorMessage);
@@ -151,6 +149,11 @@ function GeneratorForm() {
       setLoading(false);
       setProgress(0);
     }
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    await runGeneration();
   }
 
   return (
@@ -214,6 +217,26 @@ function GeneratorForm() {
           <h3>Your Design</h3>
           <img src={result.imageUrl} alt={result.prompt} className="result-image" loading="lazy" />
           <p className="result-prompt">{result.prompt}</p>
+          <div className="result-actions" aria-label="Generated tattoo actions">
+            <a
+              className="btn btn-secondary"
+              href={result.imageUrl}
+              download="ai-tattoo-reference.png"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Download Reference
+            </a>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => void runGeneration("result_regenerate")}
+              disabled={loading}
+              aria-disabled={loading}
+            >
+              Generate Another Variation
+            </button>
+          </div>
           <ComplianceNote />
         </div>
       )}
