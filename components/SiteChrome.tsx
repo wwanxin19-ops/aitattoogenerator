@@ -57,6 +57,7 @@ export function Footer() {
           <Link href="/body-parts/arm/">Arm Tattoos</Link>
           <Link href="/privacy/">Privacy</Link>
           <Link href="/terms/">Terms</Link>
+          <Link href="/cookie-policy/">Cookies</Link>
         </div>
       </div>
     </footer>
