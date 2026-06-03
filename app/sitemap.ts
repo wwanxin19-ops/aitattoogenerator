@@ -10,7 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/styles/minimalist",
     "/body-parts/arm",
     "/privacy",
-    "/terms"
+    "/terms",
+    "/cookie-policy"
   ];
   return routes.map((route) => ({
     url: `${siteUrl}${route}`,
