@@ -127,6 +127,27 @@ async function fetchUsageCredits(): Promise<Credits | null> {
   return json.success && json.data?.credits ? json.data.credits : null;
 }
 
+async function capturePayPalOrder(orderId: string) {
+  const res = await fetch("/api/billing/paypal/capture-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify({ order_id: orderId })
+  });
+
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    const code = json.error?.code;
+    const error = new Error(json.error?.message || "Unable to confirm PayPal payment.");
+    error.name = code || "PAYPAL_CAPTURE_ERROR";
+    throw error;
+  }
+
+  return json.data as { order_id: string; status: "paid" | string; credits: number };
+}
+
 async function createPayPalOrder(packageId: CreditPackageId) {
   const beforeCredits = await fetchUsageCredits();
   if (beforeCredits) {
@@ -225,9 +246,30 @@ export function BillingSuccessPanel() {
   useEffect(() => {
     let attempts = 0;
     let stopped = false;
+    let captureAttempted = false;
+
+    async function confirmReturnedPayPalOrder() {
+      if (captureAttempted) return;
+      captureAttempted = true;
+
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("token");
+      if (!orderId) return;
+
+      try {
+        await capturePayPalOrder(orderId);
+      } catch {
+        // Webhook may still confirm the order asynchronously; keep polling credits.
+      }
+    }
 
     async function pollCredits() {
       attempts += 1;
+
+      if (attempts === 1) {
+        await confirmReturnedPayPalOrder();
+      }
+
       const nextCredits = await fetchUsageCredits();
       if (stopped) return;
 
@@ -235,7 +277,7 @@ export function BillingSuccessPanel() {
         setCredits(nextCredits);
         const increased = baseline
           ? nextCredits.total > baseline.total || nextCredits.purchased > baseline.purchased
-          : false;
+          : nextCredits.purchased > 0;
 
         if (increased) {
           sessionStorage.removeItem(checkoutSnapshotKey);

@@ -2680,7 +2680,13 @@ async function createPaypalOrder(env, packageId, pkg, userId, localOrderId) {
         reference_id: localOrderId,
         custom_id: localOrderId,
         description: `${pkg.name} - ${pkg.credits} AI Tattoo Generator credits`,
-        amount: { currency_code: pkg.currency, value: amount },
+        amount: {
+          currency_code: pkg.currency,
+          value: amount,
+          breakdown: {
+            item_total: { currency_code: pkg.currency, value: amount }
+          }
+        },
         items: [{
           name: pkg.name,
           quantity: "1",
@@ -2715,6 +2721,25 @@ async function createPaypalOrder(env, packageId, pkg, userId, localOrderId) {
   return { data, approvalUrl };
 }
 __name(createPaypalOrder, "createPaypalOrder");
+async function capturePaypalOrder(env, providerOrderId) {
+  const accessToken = await paypalAccessToken(env);
+  const res = await fetch(`${paypalBaseUrl(env)}/v2/checkout/orders/${encodeURIComponent(providerOrderId)}/capture`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    }
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok || !data?.id) {
+    throw new Error(`paypal capture order ${res.status}: ${text.slice(0, 300)}`);
+  }
+  const capture = data.purchase_units?.[0]?.payments?.captures?.[0] || null;
+  return { data, captureId: capture?.id || null, status: data.status || capture?.status || null };
+}
+__name(capturePaypalOrder, "capturePaypalOrder");
 async function processPaypalWebhookEvent(env, event, rawText) {
   const eventId = event?.id;
   const eventType = event?.event_type;
@@ -2804,6 +2829,32 @@ function billingRoutes(app2) {
     } catch (err) {
       console.log(`PayPal create-order failed: ${err instanceof Error ? err.message : String(err)}`);
       return error("PAYPAL_ORDER_CREATE_FAILED", "Unable to create PayPal order", 502);
+    }
+  });
+  app2.post("/api/billing/paypal/capture-order", async (c) => {
+    const sessionToken = getSessionCookie(c.req.raw.headers);
+    if (!sessionToken) return error("UNAUTHORIZED", "Not authenticated", 401);
+    const userId = await verifySession(sessionToken, c.env.SESSION_SECRET);
+    if (!userId) return error("UNAUTHORIZED", "Invalid session", 401);
+    if (!paypalConfigured(c.env)) return error("PAYPAL_NOT_CONFIGURED", "PayPal is not configured", 503);
+    const body = await c.req.json().catch(() => null);
+    const providerOrderId = typeof body?.order_id === "string" && body.order_id.trim() ? body.order_id.trim() : null;
+    if (!providerOrderId) return error("INVALID_ORDER", "PayPal order id is required", 400);
+    const order = await getBillingOrderByProviderOrderId(c.env.D1, providerOrderId);
+    if (!order || order.user_id !== userId) return error("ORDER_NOT_FOUND", "Billing order not found", 404);
+    if (order.status === "paid") return success({ order_id: providerOrderId, status: "paid", credits: order.credits });
+    if (order.status !== "pending") return error("ORDER_NOT_PAYABLE", "Billing order cannot be captured", 409);
+    try {
+      const capture = await capturePaypalOrder(c.env, providerOrderId);
+      if (capture.status !== "COMPLETED") {
+        return error("PAYPAL_CAPTURE_NOT_COMPLETED", "PayPal payment was not completed", 409);
+      }
+      await addPurchasedCredits(c.env.D1, order.user_id, order.credits, `PayPal purchase ${order.package_id} (${providerOrderId})`);
+      await updateBillingOrderStatus(c.env.D1, providerOrderId, "paid", capture.captureId, JSON.stringify(capture.data));
+      return success({ order_id: providerOrderId, status: "paid", credits: order.credits });
+    } catch (err) {
+      console.log(`PayPal capture-order failed: ${err instanceof Error ? err.message : String(err)}`);
+      return error("PAYPAL_CAPTURE_FAILED", "Unable to capture PayPal payment", 502);
     }
   });
   app2.get("/api/billing/history", async (c) => {
