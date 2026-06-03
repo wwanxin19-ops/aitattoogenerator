@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WORKER_ORIGIN } from "@/lib/worker-proxy";
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   try {
     const res = await fetch(`${WORKER_ORIGIN}/api/usage`, {

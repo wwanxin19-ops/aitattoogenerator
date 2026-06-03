@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { proxyWorkerRequest, serverError } from "@/lib/worker-proxy";
 
+export const runtime = 'edge';
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

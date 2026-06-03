@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WORKER_ORIGIN, serverError } from "@/lib/worker-proxy";
 
+export const runtime = 'edge';
+
 const PAYPAL_HEADER_NAMES = [
   "paypal-auth-algo",
   "paypal-cert-url",

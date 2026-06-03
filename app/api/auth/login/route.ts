@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = 'edge';
+
 export async function GET() {
   // Auth login endpoint - v2
   const clientId = "442054920982-vnhs59dbe9i8qmgr015i8g6f0ir5e773.apps.googleusercontent.com";

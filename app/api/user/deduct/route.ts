@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = 'edge';
+
 const WORKER_URL = "https://aitattoogenerator.wwanxin19.workers.dev";
 
 export async function POST(request: NextRequest) {

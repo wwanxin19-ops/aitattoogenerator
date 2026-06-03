@@ -11,6 +11,8 @@ import {
   userAgent
 } from "@/lib/api-utils";
 
+export const runtime = 'edge';
+
 const EVENT_NAMES = new Set(["cta_click", "email_submit", "pricing_click", "generator_use"]);
 const DEFAULT_EVENTS_RATE_LIMIT_PER_HOUR = 120;
 const MAX_TEXT_LENGTH = 200;

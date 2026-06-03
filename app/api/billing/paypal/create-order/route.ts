@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { proxyWorkerRequest, serverError } from "@/lib/worker-proxy";
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();

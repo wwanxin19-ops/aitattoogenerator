@@ -12,6 +12,8 @@ import {
   userAgent
 } from "@/lib/api-utils";
 
+export const runtime = 'edge';
+
 const LEAD_SOURCES = new Set(["pro", "studio"]);
 const DEFAULT_LEADS_RATE_LIMIT_PER_HOUR = 5;
 
