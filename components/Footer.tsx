@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { footerLinks, siteUrl } from "@/lib/constants";
+import { footerLinks } from "@/lib/constants";
 
 export function Footer() {
   return (
