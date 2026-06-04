@@ -9,6 +9,17 @@ export const navItems = [
   { href: "/ai-tattoo-generator/", label: "Generator" }
 ];
 
+export const footerLinks = [
+  { href: "/ai-tattoo-generator/", label: "Generator" },
+  { href: "/pricing/", label: "Pricing" },
+  { href: "/styles/realism/", label: "Realism" },
+  { href: "/styles/minimalist/", label: "Minimalist" },
+  { href: "/body-parts/arm/", label: "Arm Tattoos" },
+  { href: "/privacy/", label: "Privacy" },
+  { href: "/terms/", label: "Terms" },
+  { href: "/cookie-policy/", label: "Cookies" }
+] as const;
+
 export const comparisonColumns = [
   {
     name: "Tat.ink",
