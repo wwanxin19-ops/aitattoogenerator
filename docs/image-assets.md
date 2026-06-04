@@ -9,25 +9,31 @@
 当前 `public/` 下已有图片资源：
 
 ```txt
-public/images/tattoos/
-├── realism-example.svg
-├── minimalist-example.svg
-└── arm-placement-example.svg
+public/
+├── favicon.ico
+├── og-image.png
+└── images/tattoos/
+    ├── realism-example.svg
+    ├── minimalist-example.svg
+    └── arm-placement-example.svg
 ```
 
-当前资源类型以 SVG 占位/示例图为主，适合轻量展示和 SEO 页面插图。
+当前资源类型包括 favicon、OG 社交分享图和 SVG 占位/示例图。所有公开页面引用的静态资源必须放在 `public/` 下，并通过 Next.js 可访问路径引用。
 
 ## 推荐目录结构
 
 ```txt
 public/
+├── favicon.ico             # 浏览器 tab / 搜索结果图标
+├── og-image.png            # 默认社交分享图
 └── images/
     ├── tattoos/             # 纹身示例图
     │   ├── realism-example.svg
     │   ├── minimalist-example.svg
     │   └── arm-placement-example.svg
-    ├── ui/                  # UI 装饰、图标、背景
-    ├── og/                  # Open Graph / social preview
+    ├── icons/               # 页面内图标
+    ├── fonts/               # 自托管字体，只有必要时使用
+    ├── screenshots/         # 验收截图，不直接打进前端包
     └── placeholders/        # 临时占位图
 ```
 
@@ -98,13 +104,17 @@ images: {
 
 收到设计包后检查：
 
-- [ ] 图片是否全部在 assets/public 目录中。
+- [ ] 图片资源是否统一放到 `public/` 或可被构建读取的资源目录中。
+- [ ] `favicon.ico` 是否放到正确位置并被 metadata 引用。
+- [ ] logo 是否保持一致，不在多个页面复制不同版本。
+- [ ] `og-image.png` 是否存在，并被 `metadata.openGraph.images` / `twitter.images` 引用。
+- [ ] 截图是否仅用于验收或文档，不把大批截图直接打进前端包。
+- [ ] 页面引用路径是否已经改成 Next.js 可访问路径，例如 `/images/...`。
+- [ ] 图片命名是否清晰：小写字母、短横线分隔，避免中文、空格、特殊字符。
 - [ ] 图片是否与页面引用一一对应。
 - [ ] 是否存在缺失资源或 404 引用。
 - [ ] 是否有过大图片（> 500KB 需压缩）。
-- [ ] 是否有无意义文件名。
 - [ ] 是否存在版权或来源不明图片。
-- [ ] 是否需要生成 OG 图。
 
 ## 上线前检查
 
@@ -125,6 +135,7 @@ images: {
 
 ## 后续优化候选
 
-- 增加 `public/images/og/`，为首页、生成器页、定价页生成 OG 图。
+- 增加页面级 OG 图：需要分享转化的页面可新增专属 `og-*.png`，并在页面 metadata 中引用。
 - 对真实示例图统一转 WebP 并压缩。
 - 建立图片清单脚本，自动检查 public 资源和页面引用是否匹配。
+- 建立截图归档规则：验收截图进入 docs/ 或外部验收目录，不作为业务图片打包。

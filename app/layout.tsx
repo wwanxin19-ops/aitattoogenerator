@@ -29,7 +29,24 @@ export const metadata: Metadata = {
     description: "Preview tattoo ideas before getting inked.",
     url: siteUrl,
     siteName: "AI Tattoo Generator",
-    type: "website"
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AI Tattoo Generator preview"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Tattoo Generator — See Your Tattoo Before You Ink It",
+    description: "Preview tattoo ideas before getting inked.",
+    images: ["/og-image.png"]
+  },
+  icons: {
+    icon: "/favicon.ico"
   }
 };
 
