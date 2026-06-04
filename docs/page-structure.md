@@ -135,11 +135,21 @@ Dashboard Page
 
 ## HTML → React 拆分原则
 
+核心规则：禁止把整页 HTML 直接塞进一个 React 组件。短期看起来快，长期会导致重复代码、结构混乱、难维护，并且 Header / Footer 无法统一。
+
+固定拆分链路：
+
+```txt
+页面结构识别 → 路由映射 → 区块拆分 → 公共组件抽离 → 页面组合 → 构建验证
+```
+
 1. 先按语义结构拆：`header`、`main`、`section`、`footer`。
-2. 再按复用频率拆：全站重复区块优先组件化。
-3. 最后按交互边界拆：有 state/event 的区块单独做 Client Component。
-4. 文案和链接能数据化就放入 `lib/constants.ts` 或独立数据文件。
-5. 页面文件只负责组合，复杂逻辑下沉到组件或 lib。
+2. 再按区块职责拆：`Header`、`Hero`、`FeatureGrid`、`FAQSection`、`CTA`、`Footer` 等。
+3. 再按复用频率拆：全站重复区块优先组件化，多个页面相似结构优先模板化/数据驱动。
+4. 最后按交互边界拆：有 state/event/loading/error 的区块单独做 Client Component。
+5. 文案和链接能数据化就放入 `lib/constants.ts` 或独立数据文件。
+6. 页面文件 `app/**/page.tsx` 只负责组合，复杂逻辑下沉到组件或 lib。
+7. Header / Footer 必须只有一个统一来源，不允许每个页面复制一份。
 
 ## 后续优化候选
 
