@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { DM_Sans, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import { Footer, NavBar } from "@/components/SiteChrome";
 import { siteUrl } from "@/lib/constants";
@@ -6,6 +7,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_ID || "G-LJVWME0T3W";
+const clarityProjectId = process.env.NEXT_PUBLIC_CLARITY_ID || "x5sdfbg8kx";
 
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
@@ -56,6 +58,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}>
       <body>
+        <Script id="clarity-script" strategy="afterInteractive">
+          {`
+            (function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${clarityProjectId}");
+          `}
+        </Script>
         <GoogleAnalytics gaId={googleAnalyticsId} />
         <NavBar />
         {children}
