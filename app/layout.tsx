@@ -5,6 +5,8 @@ import { siteUrl } from "@/lib/constants";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
+const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_ID || "G-LJVWME0T3W";
+
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 const ibmPlexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-ibm-plex-mono", display: "swap" });
@@ -51,12 +53,10 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
-
   return (
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}>
       <body>
-        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
+        <GoogleAnalytics gaId={googleAnalyticsId} />
         <NavBar />
         {children}
         <Footer />

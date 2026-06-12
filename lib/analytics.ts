@@ -1,14 +1,14 @@
 // GA4 event tracking utilities
-// Events are only sent when NEXT_PUBLIC_GA_ID is configured
+// Events are sent to the configured GA4 property.
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-LJVWME0T3W";
 
 interface GTagWindow extends Window {
   gtag?: (...args: unknown[]) => void;
 }
 
 function isGAEnabled(): boolean {
-  return typeof window !== "undefined" && !!GA_ID && !!(window as GTagWindow).gtag;
+  return typeof window !== "undefined" && !!(window as GTagWindow).gtag;
 }
 
 /**
