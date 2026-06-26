@@ -4,11 +4,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: "/ai-tattoo-generator/:path*",
-        destination: "/generate/:path*",
-        permanent: true,
-      },
-      {
         source: "/styles/:slug",
         destination: "/tattoo-ideas/:slug",
         permanent: true,
