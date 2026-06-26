@@ -3,8 +3,8 @@ import Link from "next/link";
 import { SchemaScripts } from "@/components/SchemaScripts";
 
 export const metadata: Metadata = {
-  title: "Tattoo Guides — Aftercare, Tips & Advice",
-  description: "Comprehensive tattoo guides covering aftercare, first tattoo tips, choosing an artist, pain levels, and cost information.",
+  title: "Tattoo Guides 2026 — How to Design, Care & Choose Your Ink",
+  description: "Free tattoo guides 2026: how to design a tattoo, aftercare tips, choosing an artist, pain levels by body part, and cost breakdown. Start with our AI tattoo generator.",
   alternates: { canonical: "/guides" }
 };
 
