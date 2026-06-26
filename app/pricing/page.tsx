@@ -5,8 +5,8 @@ import { PayPalCreditPackages } from "@/components/Billing";
 import { SchemaScripts } from "@/components/SchemaScripts";
 
 export const metadata: Metadata = {
-  title: "Pricing — Buy Tattoo Generation Credits",
-  description: "Buy one-time PayPal credit packs for AI tattoo generation. No subscription required.",
+  title: "AI Tattoo Generator Pricing — Free Plan & Pro Credits (2026)",
+  description: "AI Tattoo Generator pricing: 3 free designs daily. No subscription. Pay-as-you-go credits from $4.99. Compare to BlackInk.ai ($15/month) and save $180/year.",
   alternates: { canonical: "/pricing" }
 };
 
