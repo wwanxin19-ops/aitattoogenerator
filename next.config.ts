@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
         destination: "/placement/:slug",
         permanent: true,
       },
+      {
+        source: "/ai-tattoo-generator",
+        destination: "/generate",
+        permanent: true,
+      },
+      {
+        source: "/how-it-works",
+        destination: "/guides",
+        permanent: true,
+      },
     ];
   },
   trailingSlash: false,
