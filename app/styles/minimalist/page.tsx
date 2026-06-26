@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ComplianceNote, ContentCTA, ExampleImagePlaceholder, VisualComparison } from "@/components/Shared";
+import { SchemaScripts } from "@/components/SchemaScripts";
 
 export const metadata: Metadata = {
   title: "Minimalist Tattoo Ideas",
@@ -9,7 +10,16 @@ export const metadata: Metadata = {
 
 export default function ArticlePage() {
   return (
-    <main>
+    <>
+      <SchemaScripts
+        pageType="article"
+        article={{
+          headline: "Minimalist Tattoo Ideas — Simple Lines, Strong Meaning",
+          description: "Explore minimalist tattoo ideas, placement tips, and simple AI-generated reference designs built around strong meaning.",
+          image: "https://aitattoogenerator.cc/og-image.png"
+        }}
+      />
+      <main>
       <section className="container article-hero stack">
         <span className="eyebrow">Tattoo guide</span>
         <h1>Minimalist Tattoo Ideas — Simple Lines, Strong Meaning</h1>
@@ -36,5 +46,6 @@ export default function ArticlePage() {
         </div>
       </section>
     </main>
+    </>
   );
 }

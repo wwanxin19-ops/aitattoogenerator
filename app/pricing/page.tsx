@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FAQAccordion } from "@/components/Shared";
 import { PayPalCreditPackages } from "@/components/Billing";
+import { SchemaScripts } from "@/components/SchemaScripts";
 
 export const metadata: Metadata = {
   title: "Pricing — Buy Tattoo Generation Credits",
@@ -16,9 +17,16 @@ const faqs: Array<[string, string]> = [
   ["What does Free include?", "Free users still receive daily credits for tattoo reference generation. Purchased credits are added on top."]
 ];
 
+const faqSchemaItems = faqs.map(([question, answer]) => ({ question, answer }));
+
 export default function PricingPage() {
   return (
-    <main>
+    <>
+      <SchemaScripts
+        pageType="pricing"
+        faqs={faqSchemaItems}
+      />
+      <main>
       <section className="container article-hero stack">
         <span className="eyebrow">Credits Pricing</span>
         <h1>Buy Tattoo Generation Credits with PayPal</h1>
@@ -50,5 +58,6 @@ export default function PricingPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GeneratorForm } from "@/components/GeneratorForm";
+import { SchemaScripts } from "@/components/SchemaScripts";
 
 export const metadata: Metadata = {
   title: "AI Tattoo Generator — See Your Design in 30 Seconds",
@@ -7,9 +8,36 @@ export const metadata: Metadata = {
   alternates: { canonical: "/ai-tattoo-generator" }
 };
 
+const howToSteps = [
+  {
+    name: "Describe",
+    text: "Add subject, symbolism, size, mood, and details to describe your tattoo idea.",
+    url: "https://aitattoogenerator.cc/ai-tattoo-generator#describe"
+  },
+  {
+    name: "Choose",
+    text: "Pick the style and body placement for a useful preview.",
+    url: "https://aitattoogenerator.cc/ai-tattoo-generator#choose"
+  },
+  {
+    name: "Preview",
+    text: "Create a reference to refine with a licensed tattoo artist.",
+    url: "https://aitattoogenerator.cc/ai-tattoo-generator#preview"
+  }
+];
+
 export default function GeneratorPage() {
   return (
-    <main>
+    <>
+      <SchemaScripts
+        pageType="generator"
+        howTo={{
+          name: "How to Generate a Tattoo Design with AI",
+          description: "Follow these 3 steps to create an AI-generated tattoo reference preview in 30 seconds.",
+          steps: howToSteps
+        }}
+      />
+      <main>
       <section className="container article-hero stack">
         <span className="eyebrow">Generator</span>
         <h1>AI Tattoo Generator — See Your Design in 30 Seconds</h1>
@@ -28,5 +56,6 @@ export default function GeneratorPage() {
         <GeneratorForm />
       </section>
     </main>
+    </>
   );
 }

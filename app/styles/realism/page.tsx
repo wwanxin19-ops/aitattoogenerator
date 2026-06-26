@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ComplianceNote, ContentCTA, ExampleImagePlaceholder, VisualComparison } from "@/components/Shared";
+import { SchemaScripts } from "@/components/SchemaScripts";
 
 export const metadata: Metadata = {
   title: "Realism Tattoo Ideas",
@@ -9,7 +10,16 @@ export const metadata: Metadata = {
 
 export default function ArticlePage() {
   return (
-    <main>
+    <>
+      <SchemaScripts
+        pageType="article"
+        article={{
+          headline: "Realism Tattoo Ideas — AI-Generated Designs That Look Like Photographs",
+          description: "Explore realism tattoo ideas, best placements, and how to create AI-generated reference designs that look like photographs.",
+          image: "https://aitattoogenerator.cc/og-image.png"
+        }}
+      />
+      <main>
       <section className="container article-hero stack">
         <span className="eyebrow">Tattoo guide</span>
         <h1>Realism Tattoo Ideas — AI-Generated Designs That Look Like Photographs</h1>
@@ -36,5 +46,6 @@ export default function ArticlePage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
