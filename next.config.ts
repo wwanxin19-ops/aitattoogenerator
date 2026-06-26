@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         destination: "/guides",
         permanent: true,
       },
+      {
+        source: "/generate/",
+        destination: "/generate",
+        permanent: true,
+      },
     ];
   },
   trailingSlash: false,
