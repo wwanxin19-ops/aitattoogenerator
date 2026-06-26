@@ -23,14 +23,10 @@ const nextConfig: NextConfig = {
         destination: "/guides",
         permanent: true,
       },
-      {
-        source: "/generate/",
-        destination: "/generate",
-        permanent: true,
-      },
     ];
   },
-  trailingSlash: false,
+  // 移除 trailingSlash 配置，让 Cloudflare Pages 处理
+  // trailingSlash: false,
 };
 
 export default nextConfig;
