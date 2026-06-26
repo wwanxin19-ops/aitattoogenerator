@@ -1,15 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  poweredByHeader: false,
-  images: {
-    unoptimized: true,
-  },
   async redirects() {
     return [
       {
-        source: "/generator",
-        destination: "/ai-tattoo-generator",
+        source: "/ai-tattoo-generator",
+        destination: "/generate",
+        permanent: true,
+      },
+      {
+        source: "/styles/:slug",
+        destination: "/tattoo-ideas/:slug",
+        permanent: true,
+      },
+      {
+        source: "/body-parts/:slug",
+        destination: "/placement/:slug",
         permanent: true,
       },
     ];

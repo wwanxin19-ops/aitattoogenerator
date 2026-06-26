@@ -4,17 +4,24 @@ export const medicalDisclaimer =
 export const siteUrl = "https://aitattoogenerator.cc";
 
 export const navItems = [
-  { href: "/pricing/", label: "Pricing" },
-  { href: "/styles/realism/", label: "Styles" },
-  { href: "/ai-tattoo-generator/", label: "Generator" }
+  { href: "/generate/", label: "Generator" },
+  { href: "/tattoo-ideas/", label: "Tattoo Ideas" },
+  { href: "/placement/", label: "Placement" },
+  { href: "/guides/", label: "Guides" },
+  { href: "/pricing/", label: "Pricing" }
 ];
 
 export const footerLinks = [
-  { href: "/ai-tattoo-generator/", label: "Generator" },
+  { href: "/generate/", label: "Generator" },
   { href: "/pricing/", label: "Pricing" },
-  { href: "/styles/realism/", label: "Realism" },
-  { href: "/styles/minimalist/", label: "Minimalist" },
-  { href: "/body-parts/arm/", label: "Arm Tattoos" },
+  { href: "/tattoo-ideas/", label: "Tattoo Ideas" },
+  { href: "/placement/", label: "Placement" },
+  { href: "/guides/", label: "Guides" },
+  { href: "/blog/", label: "Blog" },
+  { href: "/compare/", label: "Compare" },
+  { href: "/about/", label: "About" },
+  { href: "/faq/", label: "FAQ" },
+  { href: "/contact/", label: "Contact" },
   { href: "/privacy/", label: "Privacy" },
   { href: "/terms/", label: "Terms" },
   { href: "/cookie-policy/", label: "Cookies" }
