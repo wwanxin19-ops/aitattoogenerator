@@ -1,0 +1,14 @@
+# Cloudflare Pages _redirects
+# 覆盖 Trailing Slashes 设置，防止 308 循环
+
+# 修复 /generate 尾部斜杠循环
+/generate/ /generate 301
+
+# 旧页面重定向
+/ai-tattoo-generator /generate 301
+/styles /tattoo-ideas 301
+/body-parts /placement 301
+/how-it-works /guides 301
+
+# 确保所有路由都能正确访问
+/* /index.html 200
