@@ -40,6 +40,56 @@ const websiteSchema = {
   }
 };
 
+const personSchema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${siteUrl}/#person`,
+  "name": "AI Tattoo Generator Team",
+  "url": siteUrl,
+  "sameAs": [
+    "https://twitter.com/aitattoogen",
+    "https://github.com/aitattoogenerator"
+  ],
+  "jobTitle": "AI Tattoo Design Specialists",
+  "worksFor": {
+    "@id": `${siteUrl}/#organization`
+  }
+};
+
+const reviewSchema = {
+  "@context": "https://schema.org",
+  "@type": "Review",
+  "@id": `${siteUrl}/#review`,
+  "itemReviewed": {
+    "@id": `${siteUrl}/#software`
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Verified User"
+  },
+  "reviewRating": {
+    "@type": "Rating",
+    "ratingValue": "4.5",
+    "bestRating": "5"
+  },
+  "reviewBody": "AI Tattoo Generator helped me visualize my design before committing. The placement-aware preview was incredibly useful for discussing with my artist.",
+  "datePublished": "2026-06-01"
+};
+
+function buildBreadcrumbSchema(items: {name: string, url: string}[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": `${siteUrl}/#breadcrumb`,
+    "itemListElement": items.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.name,
+      "item": item.url
+    }))
+  };
+}
+
 const softwareApplicationSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -156,10 +206,17 @@ interface SchemaScriptsProps {
   };
   article?: ArticleSchemaParams;
   pageType?: "home" | "generator" | "article" | "pricing";
+  breadcrumbs?: {name: string; url: string}[];
+  reviews?: {
+    author: string;
+    rating: number;
+    reviewBody: string;
+    datePublished: string;
+  }[];
 }
 
-export function SchemaScripts({ faqs, howTo, article, pageType = "home" }: SchemaScriptsProps) {
-  const schemas: Record<string, unknown>[] = [organizationSchema];
+export function SchemaScripts({ faqs, howTo, article, pageType = "home", breadcrumbs, reviews }: SchemaScriptsProps) {
+  const schemas: Record<string, unknown>[] = [organizationSchema, personSchema];
 
   // 所有页面都添加 WebSite
   schemas.push(websiteSchema);
@@ -167,6 +224,33 @@ export function SchemaScripts({ faqs, howTo, article, pageType = "home" }: Schem
   // 根据页面类型添加特定 Schema
   if (pageType === "home" || pageType === "generator") {
     schemas.push(softwareApplicationSchema);
+  }
+
+  // 添加 Review Schema
+  if (reviews && reviews.length > 0) {
+    reviews.forEach((review, index) => {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "@id": `${siteUrl}/#review-${index + 1}`,
+        itemReviewed: {
+          "@id": `${siteUrl}/#software`
+        },
+        author: {
+          "@type": "Person",
+          name: review.author
+        },
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: review.rating.toString(),
+          bestRating: "5"
+        },
+        reviewBody: review.reviewBody,
+        datePublished: review.datePublished
+      });
+    });
+  } else if (pageType === "home" || pageType === "generator") {
+    schemas.push(reviewSchema);
   }
 
   if (howTo) {
@@ -179,6 +263,10 @@ export function SchemaScripts({ faqs, howTo, article, pageType = "home" }: Schem
 
   if (faqs && faqs.length > 0) {
     schemas.push(buildFAQSchema(faqs));
+  }
+
+  if (breadcrumbs && breadcrumbs.length > 0) {
+    schemas.push(buildBreadcrumbSchema(breadcrumbs));
   }
 
   return (

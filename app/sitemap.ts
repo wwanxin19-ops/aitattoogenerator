@@ -57,6 +57,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/blackink-alternative", priority: 0.7, changefreq: "monthly" },
     { route: "/free-tattoo-generator-alternative", priority: 0.7, changefreq: "monthly" },
     
+    // AI 搜索优化页面
+    { route: "/what-is-ai-tattoo-generator", priority: 0.8, changefreq: "monthly" },
+    { route: "/best-ai-tattoo-generator", priority: 0.8, changefreq: "weekly" },
+    
     // 法律页面
     { route: "/privacy", priority: 0.3, changefreq: "yearly" },
     { route: "/terms", priority: 0.3, changefreq: "yearly" },
