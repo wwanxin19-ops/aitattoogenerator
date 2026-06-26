@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FAQAccordion, HeroGeneratorPanel, HowItWorksSteps, TrustSignalGrid, VisualComparison } from "@/components/Shared";
+import { SchemaScripts } from "@/components/SchemaScripts";
 
 const faqs: Array<[string, string]> = [
   ["Is this a replacement for a tattoo artist?", "No. The generator creates reference and inspiration material so you can communicate your direction more clearly."],
@@ -9,7 +10,11 @@ const faqs: Array<[string, string]> = [
 
 export default function HomePage() {
   return (
-    <main>
+    <>
+      <SchemaScripts
+        faqs={faqs.map(([question, answer]) => ({ question, answer }))}
+      />
+      <main>
       <section className="container hero-grid">
         <div className="stack">
           <span className="eyebrow">AI tattoo preview studio</span>
@@ -68,6 +73,7 @@ export default function HomePage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
 // rebuild 1780146348
