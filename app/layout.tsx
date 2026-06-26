@@ -23,14 +23,14 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AI Tattoo Generator — See Your Tattoo Before You Ink It",
+    default: "AI Tattoo Generator Free — Design Your Tattoo Online in 30 Seconds",
     template: "%s | AI Tattoo Generator"
   },
-  description: "Preview tattoo ideas with an AI tattoo generator designed for references you can discuss with a licensed tattoo artist.",
+  description: "Free AI tattoo generator — create your design in 30 seconds, no signup needed. Preview before you ink. 3 free designs daily. Try now.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "AI Tattoo Generator — See Your Tattoo Before You Ink It",
-    description: "Preview tattoo ideas before getting inked.",
+    title: "AI Tattoo Generator Free — Design Your Tattoo Online in 30 Seconds",
+    description: "Free AI tattoo generator — create your design in 30 seconds, no signup needed. Preview before you ink.",
     url: siteUrl,
     siteName: "AI Tattoo Generator",
     type: "website",
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Tattoo Generator — See Your Tattoo Before You Ink It",
-    description: "Preview tattoo ideas before getting inked.",
+    title: "AI Tattoo Generator Free — Design Your Tattoo Online in 30 Seconds",
+    description: "Free AI tattoo generator — create your design in 30 seconds, no signup needed. Preview before you ink.",
     images: ["/og-image.png"]
   },
   icons: {

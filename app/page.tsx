@@ -17,15 +17,15 @@ export default function HomePage() {
       <main>
       <section className="container hero-grid">
         <div className="stack">
-          <span className="eyebrow">AI tattoo preview studio</span>
-          <h1>See Your Tattoo Before You Ink It</h1>
-          <p className="lead">Turn a rough tattoo idea into a clear visual reference you can refine, compare, and bring to a licensed tattoo artist.</p>
+          <span className="eyebrow">Free AI tattoo preview studio</span>
+          <h1>AI Tattoo Generator — See Your Design Before You Ink</h1>
+          <p className="lead">Turn a rough tattoo idea into a clear visual reference. Create your design in 30 seconds, no signup needed.</p>
           <div className="actions">
-            <Link className="btn btn-primary" href="/ai-tattoo-generator/">Start Designing Free</Link>
-            <Link className="btn btn-secondary" href="/pricing/">Buy credits</Link>
-            <Link className="btn btn-secondary" href="/styles/realism/">Explore styles</Link>
+            <a className="btn btn-primary" href="/generate">Start Designing Free</a>
+            <a className="btn btn-secondary" href="/pricing">Buy credits</a>
+            <a className="btn btn-secondary" href="/tattoo-ideas">Explore styles</a>
           </div>
-          <p className="trust-line">No signup required. 3 free designs daily.</p>
+          <p className="trust-line">★ 4.5/5 · 10K+ designs · No signup · 3 free daily</p>
         </div>
         <HeroGeneratorPanel />
       </section>
