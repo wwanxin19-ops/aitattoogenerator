@@ -58,6 +58,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/free-tattoo-generator-alternative", priority: 0.7, changefreq: "monthly" },
     
     // EEAT 页面
+    { route: "/team", priority: 0.6, changefreq: "monthly" },
+    { route: "/press", priority: 0.6, changefreq: "monthly" },
+    { route: "/link-building-guide", priority: 0.5, changefreq: "monthly" },
     { route: "/reviews", priority: 0.7, changefreq: "weekly" },
     { route: "/user-stories", priority: 0.7, changefreq: "monthly" },
     
