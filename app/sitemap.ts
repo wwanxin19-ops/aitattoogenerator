@@ -46,6 +46,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/contact", priority: 0.5, changefreq: "monthly" },
     { route: "/faq", priority: 0.6, changefreq: "monthly" },
     
+    // 对比页
+    { route: "/compare", priority: 0.7, changefreq: "monthly" },
+    { route: "/blackink-vs-ai-tattoo-generator", priority: 0.7, changefreq: "monthly" },
+    
     // 替代品页
     { route: "/blackink-alternative", priority: 0.7, changefreq: "monthly" },
     { route: "/free-tattoo-generator-alternative", priority: 0.7, changefreq: "monthly" },
