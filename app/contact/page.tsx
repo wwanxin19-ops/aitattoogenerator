@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SchemaScripts } from "@/components/SchemaScripts";
+import { ContactForm } from "./ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact AI Tattoo Generator — Get in Touch",
@@ -28,33 +29,37 @@ export default function ContactPage() {
         </section>
 
         <section className="section section-tight">
-          <div className="container grid-2">
-            <div className="card-dark stack">
-              <h3>Support</h3>
-              <p>For technical issues or account help:</p>
-              <a href="mailto:support@aitattoogenerator.cc" className="link">support@aitattoogenerator.cc</a>
-            </div>
-            
-            <div className="card-dark stack">
-              <h3>Feedback</h3>
-              <p>Suggestions or feature requests:</p>
-              <a href="mailto:feedback@aitattoogenerator.cc" className="link">feedback@aitattoogenerator.cc</a>
-            </div>
-            
-            <div className="card-dark stack">
-              <h3>Partnerships</h3>
-              <p>For business or media inquiries:</p>
-              <a href="mailto:partners@aitattoogenerator.cc" className="link">partners@aitattoogenerator.cc</a>
-            </div>
-            
-            <div className="card-dark stack">
-              <h3>Social</h3>
-              <p>Follow us for updates and inspiration:</p>
-              <div className="flex gap-4">
-                <a href="https://twitter.com/aitattoogen" target="_blank" rel="noopener noreferrer" className="link">Twitter</a>
-                <a href="https://github.com/aitattoogenerator" target="_blank" rel="noopener noreferrer" className="link">GitHub</a>
+          <div className="container contact-layout">
+            <div className="stack">
+              <div className="card-dark stack">
+                <h3>Support</h3>
+                <p>For technical issues, account help, or billing questions:</p>
+                <a href="mailto:support@aitattoogenerator.cc" className="link">support@aitattoogenerator.cc</a>
+              </div>
+              
+              <div className="card-dark stack">
+                <h3>Feedback</h3>
+                <p>Suggestions or feature requests:</p>
+                <a href="mailto:feedback@aitattoogenerator.cc" className="link">feedback@aitattoogenerator.cc</a>
+              </div>
+              
+              <div className="card-dark stack">
+                <h3>Partnerships</h3>
+                <p>For business or media inquiries:</p>
+                <a href="mailto:partners@aitattoogenerator.cc" className="link">partners@aitattoogenerator.cc</a>
+              </div>
+              
+              <div className="card-dark stack">
+                <h3>Social</h3>
+                <p>Follow us for updates and inspiration:</p>
+                <div className="flex gap-4">
+                  <a href="https://twitter.com/aitattoogen" target="_blank" rel="noopener noreferrer" className="link">Twitter</a>
+                  <a href="https://github.com/aitattoogenerator" target="_blank" rel="noopener noreferrer" className="link">GitHub</a>
+                </div>
               </div>
             </div>
+
+            <ContactForm />
           </div>
         </section>
 
