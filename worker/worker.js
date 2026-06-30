@@ -2892,6 +2892,202 @@ function billingRoutes(app2) {
 }
 __name(billingRoutes, "billingRoutes");
 
+// src/routes/contact.ts
+var CONTACT_CATEGORIES = /* @__PURE__ */ new Set(["support", "feedback", "partnership", "billing", "other"]);
+var RESEND_API_URL = "https://api.resend.com/emails";
+var DEFAULT_CONTACT_RATE_LIMIT_PER_HOUR = 3;
+var MAX_CONTACT_NAME_LENGTH = 80;
+var MAX_CONTACT_SUBJECT_LENGTH = 120;
+var MAX_CONTACT_MESSAGE_LENGTH = 4000;
+var MIN_CONTACT_MESSAGE_LENGTH = 10;
+var contactIpSubmissions = /* @__PURE__ */ new Map();
+function contactJson(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(contactJson, "contactJson");
+function contactError(code, message, status = 400) {
+  return contactJson({ success: false, error: { code, message } }, status);
+}
+__name(contactError, "contactError");
+function normalizeContactText(value, maxLength) {
+  if (typeof value !== "string") return "";
+  return value.replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+__name(normalizeContactText, "normalizeContactText");
+function normalizeContactEmail(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase();
+}
+__name(normalizeContactEmail, "normalizeContactEmail");
+function normalizeContactMessage(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, MAX_CONTACT_MESSAGE_LENGTH);
+}
+__name(normalizeContactMessage, "normalizeContactMessage");
+function normalizeContactCategory(value) {
+  if (typeof value !== "string") return "support";
+  const category = value.trim().toLowerCase();
+  return CONTACT_CATEGORIES.has(category) ? category : "support";
+}
+__name(normalizeContactCategory, "normalizeContactCategory");
+function validContactEmail(email) {
+  return email.length > 0 && email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+__name(validContactEmail, "validContactEmail");
+function contactClientIp(c) {
+  return c.req.header("cf-connecting-ip") || c.req.header("x-real-ip") || c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+}
+__name(contactClientIp, "contactClientIp");
+function contactUserAgent(c) {
+  return (c.req.header("user-agent") || "unknown").slice(0, 512);
+}
+__name(contactUserAgent, "contactUserAgent");
+function contactRateLimitPerHour(env) {
+  const value = Number(env.CONTACT_RATE_LIMIT_PER_HOUR || DEFAULT_CONTACT_RATE_LIMIT_PER_HOUR);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_CONTACT_RATE_LIMIT_PER_HOUR;
+}
+__name(contactRateLimitPerHour, "contactRateLimitPerHour");
+function contactRateLimited(env, ip) {
+  if (ip === "unknown") return false;
+  const now = Date.now();
+  const oneHourAgo = now - 60 * 60 * 1000;
+  const recent = (contactIpSubmissions.get(ip) || []).filter((timestamp) => timestamp > oneHourAgo);
+  if (recent.length >= contactRateLimitPerHour(env)) {
+    contactIpSubmissions.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  contactIpSubmissions.set(ip, recent);
+  return false;
+}
+__name(contactRateLimited, "contactRateLimited");
+function escapeContactHtml(value) {
+  return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+__name(escapeContactHtml, "escapeContactHtml");
+function renderContactOwnerEmail(input) {
+  const messageHtml = escapeContactHtml(input.message).replace(/\n/g, "<br />");
+  return `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#17130f">
+      <h2>New AI Tattoo Generator contact request</h2>
+      <p><strong>Name:</strong> ${escapeContactHtml(input.name)}</p>
+      <p><strong>Email:</strong> ${escapeContactHtml(input.email)}</p>
+      <p><strong>Category:</strong> ${escapeContactHtml(input.category)}</p>
+      <p><strong>Subject:</strong> ${escapeContactHtml(input.subject)}</p>
+      <hr />
+      <p>${messageHtml}</p>
+      <hr />
+      <p style="color:#7c6c5b;font-size:13px">IP: ${escapeContactHtml(input.ip)}<br />User-Agent: ${escapeContactHtml(input.userAgentValue)}</p>
+    </div>
+  `;
+}
+__name(renderContactOwnerEmail, "renderContactOwnerEmail");
+function renderContactAutoReplyEmail(name) {
+  return `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#17130f">
+      <h2>We received your message</h2>
+      <p>Hi ${escapeContactHtml(name)},</p>
+      <p>Thanks for contacting AI Tattoo Generator. We received your message and our team will review it soon.</p>
+      <p>For account, billing, or generation issues, please reply to this email with any extra context such as your account email, order time, or generation prompt.</p>
+      <p>— AI Tattoo Generator Support</p>
+    </div>
+  `;
+}
+__name(renderContactAutoReplyEmail, "renderContactAutoReplyEmail");
+async function sendResendEmail(env, input) {
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from: input.from,
+      to: input.to,
+      reply_to: input.replyTo,
+      subject: input.subject,
+      html: input.html
+    })
+  });
+  const responseBody = await response.text();
+  let parsed = null;
+  try {
+    parsed = responseBody ? JSON.parse(responseBody) : null;
+  } catch {
+    parsed = { raw: responseBody.slice(0, 500) };
+  }
+  if (!response.ok) {
+    const message = parsed && typeof parsed.message === "string" ? parsed.message : responseBody;
+    throw new Error(`Resend failed ${response.status}: ${message}`);
+  }
+  return parsed;
+}
+__name(sendResendEmail, "sendResendEmail");
+function contactRoutes(app2) {
+  app2.post("/api/contact", async (c) => {
+    let body = null;
+    try {
+      body = await c.req.json();
+    } catch {
+      return contactError("INVALID_JSON", "Request body must be valid JSON.", 400);
+    }
+    if (typeof body?.website === "string" && body.website.trim().length > 0) {
+      return contactError("BOT_DETECTED", "Unable to submit this message.", 400);
+    }
+    const name = normalizeContactText(body?.name, MAX_CONTACT_NAME_LENGTH);
+    const email = normalizeContactEmail(body?.email);
+    const category = normalizeContactCategory(body?.category);
+    const subject = normalizeContactText(body?.subject, MAX_CONTACT_SUBJECT_LENGTH);
+    const message = normalizeContactMessage(body?.message);
+    if (name.length < 2) return contactError("INVALID_NAME", "Please enter your name.", 400);
+    if (!validContactEmail(email)) return contactError("INVALID_EMAIL", "Please enter a valid email address.", 400);
+    if (!CONTACT_CATEGORIES.has(category)) return contactError("INVALID_CATEGORY", "Please choose a valid contact category.", 400);
+    if (subject.length < 3) return contactError("INVALID_SUBJECT", "Please enter a subject.", 400);
+    if (message.length < MIN_CONTACT_MESSAGE_LENGTH) return contactError("INVALID_MESSAGE", "Please enter at least 10 characters.", 400);
+    const ip = contactClientIp(c);
+    if (contactRateLimited(c.env, ip)) return contactError("RATE_LIMITED", "Too many messages. Please try again later.", 429);
+    if (!c.env.RESEND_API_KEY) return contactError("EMAIL_NOT_CONFIGURED", "Email delivery is not configured.", 503);
+    const from = c.env.CONTACT_FROM_EMAIL || "AI Tattoo Generator <support@aitattoogenerator.cc>";
+    const supportTo = c.env.CONTACT_TO_EMAIL || "support@aitattoogenerator.cc";
+    try {
+      const ownerEmail = await sendResendEmail(c.env, {
+        from,
+        to: supportTo.split(",").map((item) => item.trim()).filter(Boolean),
+        replyTo: email,
+        subject: `[AI Tattoo Generator] ${category}: ${subject}`,
+        html: renderContactOwnerEmail({ name, email, category, subject, message, ip, userAgentValue: contactUserAgent(c) })
+      });
+      const autoReply = await sendResendEmail(c.env, {
+        from,
+        to: email,
+        replyTo: supportTo.split(",")[0]?.trim() || "support@aitattoogenerator.cc",
+        subject: "We received your AI Tattoo Generator message",
+        html: renderContactAutoReplyEmail(name)
+      });
+      return contactJson({
+        success: true,
+        data: {
+          owner_email_id: typeof ownerEmail?.id === "string" ? ownerEmail.id : null,
+          auto_reply_id: typeof autoReply?.id === "string" ? autoReply.id : null
+        }
+      }, 202);
+    } catch (err) {
+      console.log(`contact email failed: ${err instanceof Error ? err.message : String(err)}`);
+      return contactError("EMAIL_SEND_FAILED", "Unable to send your message right now.", 502);
+    }
+  });
+}
+__name(contactRoutes, "contactRoutes");
+
 // src/routes/generate.ts
 init_db();
 function generateRoutes(app2) {
@@ -3158,6 +3354,7 @@ healthRoutes(app);
 authRoutes(app);
 usageRoutes(app);
 billingRoutes(app);
+contactRoutes(app);
 generateRoutes(app);
 imageRoutes(app);
 app.notFound(() => {

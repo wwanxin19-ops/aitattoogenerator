@@ -14,3 +14,8 @@ bucket_name = "aitattoogenerator-images"
 [[queues.producers]]
 binding = "AI_QUEUE"
 queue = "aitattoogenerator-ai-queue"
+
+[vars]
+CONTACT_FROM_EMAIL = "AI Tattoo Generator <support@aitattoogenerator.cc>"
+CONTACT_TO_EMAIL = "support@aitattoogenerator.cc"
+CONTACT_RATE_LIMIT_PER_HOUR = "3"
