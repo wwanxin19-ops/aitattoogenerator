@@ -24,7 +24,8 @@ export const footerLinks = [
   { href: "/contact/", label: "Contact" },
   { href: "/privacy/", label: "Privacy" },
   { href: "/terms/", label: "Terms" },
-  { href: "/cookie-policy/", label: "Cookies" }
+  { href: "/cookie-policy/", label: "Cookies" },
+  { href: "/refund-policy/", label: "Refund Policy" }
 ] as const;
 
 export const comparisonColumns = [

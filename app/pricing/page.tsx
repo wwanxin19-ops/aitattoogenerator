@@ -35,6 +35,9 @@ export default function PricingPage() {
           <Link className="btn btn-secondary" href="/dashboard/billing/">View Billing</Link>
           <Link className="btn btn-secondary" href="/ai-tattoo-generator/">Generate Tattoo</Link>
         </div>
+        <p style={{ marginTop: 16, fontSize: 14, color: 'var(--neutral-400)' }}>
+          Questions about refunds? Read our <Link href="/refund-policy/" style={{ color: 'var(--copper-500)', textDecoration: 'underline' }}>Refund Policy</Link>.
+        </p>
       </section>
 
       <section className="section section-tight">
