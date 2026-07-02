@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { footerLinks } from "@/lib/constants";
 
@@ -17,6 +19,17 @@ export function Footer() {
               {link.label}
             </Link>
           ))}
+          <button
+            type="button"
+            className="cookie-settings-link"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("openCookieSettings"));
+              }
+            }}
+          >
+            Cookie Settings
+          </button>
         </div>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeneratorForm } from "@/components/GeneratorForm";
 import { SchemaScripts } from "@/components/SchemaScripts";
+import { AgeGateWrapper } from "@/components/AgeGateWrapper";
 
 export const dynamic = 'force-static';
 export const metadata: Metadata = {
@@ -98,7 +99,9 @@ export default function GeneratorPage() {
         {/* Generator Tool */}
         <section className="section section-tight">
           <div className="container">
-            <GeneratorForm />
+            <AgeGateWrapper>
+              <GeneratorForm />
+            </AgeGateWrapper>
           </div>
         </section>
 

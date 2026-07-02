@@ -13,7 +13,10 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/about") {
     return NextResponse.redirect(new URL("/", request.url), 308);
   }
-  
+  if (pathname === "/cookies" || pathname === "/cookies/") {
+    return NextResponse.redirect(new URL("/cookie-policy", request.url), 308);
+  }
+
   // Default: pass through
   return NextResponse.next({
     request: {
