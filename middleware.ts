@@ -4,9 +4,6 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Handle redirects
-  if (pathname === "/generate") {
-    return NextResponse.redirect(new URL("/ai-tattoo-generator", request.url), 308);
-  }
   if (pathname === "/gallery") {
     return NextResponse.redirect(new URL("/", request.url), 308);
   }
